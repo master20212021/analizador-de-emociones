@@ -32,8 +32,8 @@
         }
         .neon-text-gold {
             color: #fbbf24; /* Dorado neón */
-            /* Ajuste para máxima nitidez: sombras muy concentradas y pequeñas */
-            text-shadow: 0 0 1px #fbbf24, 0 0 3px #fbbf24;
+            /* Se eliminó el text-shadow para máxima nitidez y formalidad */
+            text-shadow: none; 
         }
 
         /* Estilos para el termómetro emocional */
@@ -222,7 +222,7 @@
                     <textarea id="trader-text" class="w-full h-40 bg-gray-900 border-2 border-gray-700 rounded-lg p-4 text-lg text-gray-200 focus:ring-2 focus:ring-cyan-400 focus:outline-none transition" placeholder="Ej: 'Entré tarde por miedo a perder, luego el precio subió sin mí y sentí mucha frustración. En la siguiente operación, arriesgué más para recuperar...'"></textarea>
                     <div class="mt-6 text-center">
                         <button id="analyze-button" onclick="performAIAnalysis()" class="analyze-button text-white font-bold py-3 px-8 rounded-lg text-xl">
-                            Analizar mi Emoción (<span id="trial-count">1</span> Uso de Prueba)
+                            Analizar mi Emoción (<span id="trial-count"></span> Uso de Prueba)
                         </button>
                     </div>
                     <div id="loader" class="mt-8 flex justify-center hidden">
@@ -273,7 +273,9 @@
     </div>
 
     <script>
-        const API_KEY = ""; // La clave API se inyectará en tiempo de ejecución
+        // ¡IMPORTANTE! Reemplaza "TU_CLAVE_DE_API_DE_GEMINI_AQUI" con tu clave de API real de Gemini.
+        // CUIDADO: Exponer claves de API en el cliente es inseguro para producción.
+        const API_KEY = "AIzaSyDebuUKPwhlHqkBMfTxYF6oM_WSYbs6QEI"; 
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
         
         const MAX_DAILY_USES = 6;
@@ -306,27 +308,29 @@
         });
 
         /**
-         * Actualiza el contador de usos de prueba en la interfaz y habilita/deshabilita el botón.
-         * Esta función ahora es más robusta para manejar el elemento span dentro del botón.
+         * Actualiza el contador de usos diarios en la interfaz y habilita/deshabilita el botón.
          */
         function updateTrialDisplay() {
             const analyzeButton = document.getElementById('analyze-button');
             const analyzerLocked = document.getElementById('analyzer-locked');
+            const trialCountSpan = document.getElementById('trial-count'); // Asegúrate de obtener el span.
 
             if (dailyUsesLeft <= 0) {
                 analyzeButton.disabled = true;
                 analyzeButton.classList.add('hidden'); // Oculta el botón
                 analyzerLocked.classList.remove('hidden'); // Muestra el mensaje de bloqueo
-                // Actualiza el mensaje de bloqueo para reflejar los usos correctos
                 analyzerLocked.querySelector('p').textContent = `Has usado tus ${MAX_DAILY_USES} análisis de hoy. Vuelve mañana para más o contacta soporte para la versión ilimitada.`;
             } else {
                 analyzeButton.disabled = false;
                 analyzeButton.classList.remove('hidden'); // Muestra el botón
                 analyzerLocked.classList.add('hidden'); // Oculta el mensaje de bloqueo
                 
-                // Reconstruye el innerHTML del botón para asegurar que el span con el contador esté presente
-                // y no sea eliminado si se actualiza el textContent de analyzeButton directamente en otro lugar.
-                analyzeButton.innerHTML = `Analizar mi Emoción (<span id="trial-count">${dailyUsesLeft}</span> Uso${dailyUsesLeft !== 1 ? 's' : ''} Restantes Hoy)`;
+                // Asegura que el span existe antes de intentar actualizar su textContent
+                if (trialCountSpan) {
+                    trialCountSpan.textContent = dailyUsesLeft;
+                    // También actualiza el texto del botón completo si es necesario
+                    analyzeButton.innerHTML = `Analizar mi Emoción (<span id="trial-count">${dailyUsesLeft}</span> Uso${dailyUsesLeft !== 1 ? 's' : ''} Restantes Hoy)`;
+                }
             }
         }
 
@@ -373,7 +377,9 @@
             loader.classList.remove('hidden');
             analysisResultDiv.classList.add('hidden');
             analyzeButton.disabled = true;
-            analyzeButton.textContent = 'Analizando...'; // Esto sobreescribirá el span, pero está bien porque el loader está visible.
+            // Al actualizar el innerHTML del botón para mostrar el estado "Analizando...", 
+            // no necesitamos preocuparnos por el span ya que será sobrescrito temporalmente.
+            analyzeButton.innerHTML = 'Analizando...'; 
 
             // Resetear íconos de emoción
             const emotionIcons = {
