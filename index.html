@@ -32,8 +32,7 @@
         }
         .neon-text-gold {
             color: #fbbf24; /* Dorado neón */
-            /* Se eliminó el text-shadow para máxima nitidez y formalidad */
-            text-shadow: none; 
+            text-shadow: none; /* Sin text-shadow para máxima nitidez */
         }
 
         /* Estilos para el termómetro emocional */
@@ -182,16 +181,34 @@
             color: #fbbf24; /* Texto dorado */
             box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
         }
+
+        /* Estilo para el logo */
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem; /* Espacio antes del título */
+        }
+        .logo-container img {
+            max-width: 100px; /* Tamaño máximo del logo */
+            height: auto;
+            margin-right: 1rem; /* Espacio entre el logo y el título */
+            filter: drop-shadow(0 0 5px rgba(6, 182, 212, 0.5)); /* Efecto sutil neón para el logo */
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
     <div class="dashboard-card p-8 sm:p-10 md:p-12 w-full max-w-4xl text-white">
         <!-- Título principal y etiqueta "Impulsado por IA" -->
         <div class="text-center mb-10">
-            <h1 class="text-4xl sm:text-5xl font-extrabold neon-text-gold mb-2">
-                Analizador de Emociones – Versión Pro
-            </h1>
-            <p class="text-xl sm:text-2xl font-light neon-text-cyan">
+            <!-- Contenedor para el logo y el título -->
+            <div class="logo-container">
+                <img id="app-logo" src="https://i.postimg.cc/nVW2PvKM/logo-png-oficial-fondo-trasparente.png" alt="Logo de la Aplicación">
+                <h1 class="text-4xl sm:text-5xl font-extrabold neon-text-gold">
+                    Analizador de Emociones – Versión Pro
+                </h1>
+            </div>
+            <p class="text-xl sm:text-2xl font-light neon-text-cyan mt-2">
                 Impulsado por IA <span class="ai-brain-icon">🧠</span>
             </p>
         </div>
@@ -275,7 +292,7 @@
     <script>
         // ¡IMPORTANTE! Reemplaza "TU_CLAVE_DE_API_DE_GEMINI_AQUI" con tu clave de API real de Gemini.
         // CUIDADO: Exponer claves de API en el cliente es inseguro para producción.
-        const API_KEY = "AIzaSyDebuUKPwhlHqkBMfTxYF6oM_WSYbs6QEI"; 
+        const API_KEY = "TU_CLAVE_DE_API_DE_GEMINI_AQUI"; 
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
         
         const MAX_DAILY_USES = 6;
@@ -377,8 +394,6 @@
             loader.classList.remove('hidden');
             analysisResultDiv.classList.add('hidden');
             analyzeButton.disabled = true;
-            // Al actualizar el innerHTML del botón para mostrar el estado "Analizando...", 
-            // no necesitamos preocuparnos por el span ya que será sobrescrito temporalmente.
             analyzeButton.innerHTML = 'Analizando...'; 
 
             // Resetear íconos de emoción
