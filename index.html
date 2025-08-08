@@ -276,9 +276,7 @@
         const API_KEY = ""; // La clave API se inyectará en tiempo de ejecución
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
         
-        // --- CAMBIO AQUÍ: Límite de usos diarios a 6 ---
         const MAX_DAILY_USES = 6;
-        // ---------------------------------------------
         const USES_KEY = 'emotionAnalyzerDailyUses';
         const LAST_USE_DATE_KEY = 'emotionAnalyzerLastUseDate';
         
@@ -309,23 +307,26 @@
 
         /**
          * Actualiza el contador de usos de prueba en la interfaz y habilita/deshabilita el botón.
+         * Esta función ahora es más robusta para manejar el elemento span dentro del botón.
          */
         function updateTrialDisplay() {
-            const trialCountSpan = document.getElementById('trial-count');
             const analyzeButton = document.getElementById('analyze-button');
             const analyzerLocked = document.getElementById('analyzer-locked');
 
-            trialCountSpan.textContent = dailyUsesLeft;
             if (dailyUsesLeft <= 0) {
                 analyzeButton.disabled = true;
-                analyzeButton.textContent = 'Análisis (0 Usos Restantes)';
-                // Actualizar el mensaje de bloqueo para reflejar los 6 usos
+                analyzeButton.classList.add('hidden'); // Oculta el botón
+                analyzerLocked.classList.remove('hidden'); // Muestra el mensaje de bloqueo
+                // Actualiza el mensaje de bloqueo para reflejar los usos correctos
                 analyzerLocked.querySelector('p').textContent = `Has usado tus ${MAX_DAILY_USES} análisis de hoy. Vuelve mañana para más o contacta soporte para la versión ilimitada.`;
-                analyzerLocked.classList.remove('hidden');
             } else {
                 analyzeButton.disabled = false;
-                analyzeButton.textContent = `Analizar mi Emoción (${dailyUsesLeft} Uso${dailyUsesLeft !== 1 ? 's' : ''} Restantes Hoy)`;
-                analyzerLocked.classList.add('hidden');
+                analyzeButton.classList.remove('hidden'); // Muestra el botón
+                analyzerLocked.classList.add('hidden'); // Oculta el mensaje de bloqueo
+                
+                // Reconstruye el innerHTML del botón para asegurar que el span con el contador esté presente
+                // y no sea eliminado si se actualiza el textContent de analyzeButton directamente en otro lugar.
+                analyzeButton.innerHTML = `Analizar mi Emoción (<span id="trial-count">${dailyUsesLeft}</span> Uso${dailyUsesLeft !== 1 ? 's' : ''} Restantes Hoy)`;
             }
         }
 
@@ -372,7 +373,7 @@
             loader.classList.remove('hidden');
             analysisResultDiv.classList.add('hidden');
             analyzeButton.disabled = true;
-            analyzeButton.textContent = 'Analizando...';
+            analyzeButton.textContent = 'Analizando...'; // Esto sobreescribirá el span, pero está bien porque el loader está visible.
 
             // Resetear íconos de emoción
             const emotionIcons = {
@@ -480,7 +481,7 @@
                         dailyUsesLeft--;
                         localStorage.setItem(USES_KEY, dailyUsesLeft);
                         localStorage.setItem(LAST_USE_DATE_KEY, new Date().toDateString()); // Actualiza la fecha de último uso
-                        updateTrialDisplay();
+                        updateTrialDisplay(); // Llama a updateTrialDisplay al final para asegurar el estado correcto del botón.
 
                         break; // Salir del bucle si es exitoso
 
@@ -496,7 +497,8 @@
                         showModal('Error en el Análisis', 'No se pudo completar el análisis de emociones. Inténtalo de nuevo más tarde.');
                         // Restaurar el botón y ocultar el loader en caso de error final
                         analyzeButton.disabled = false;
-                        analyzeButton.textContent = `Analizar mi Emoción (${dailyUsesLeft} Uso${dailyUsesLeft !== 1 ? 's' : ''} Restantes Hoy)`;
+                        // Asegurarse de que el botón recupere su texto correcto, incluyendo el span si es necesario
+                        updateTrialDisplay();
                         loader.classList.add('hidden');
                         analysisResultDiv.classList.add('hidden');
                     }
@@ -504,7 +506,7 @@
             }
             // Ocultar loader y re-habilitar botón después de todos los reintentos o éxito
             loader.classList.add('hidden');
-            updateTrialDisplay(); // Actualiza el estado del botón después de la operación
+            updateTrialDisplay(); // Llama a updateTrialDisplay al final para asegurar el estado correcto del botón.
         }
 
         // Ejecutar un escaneo inicial (aleatorio) al cargar la página si aún no se ha usado el trial
