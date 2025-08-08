@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador de Emociones – Versión Pro</title>
+    <!-- Incluye Tailwind CSS desde CDN para estilos minimalistas y responsivos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos base para la fuente y el fondo oscuro */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* Muy oscuro, casi negro */
+            color: #e2e8f0; /* Texto claro */
+            overflow-x: hidden; /* Evita barras de desplazamiento horizontales innecesarias */
+        }
+        /* Estilo para la tarjeta principal del dashboard, con bordes y sombras neón */
+        .dashboard-card {
+            background-color: #1a202c; /* Fondo oscuro para la tarjeta */
+            border: 1px solid rgba(6, 182, 212, 0.3); /* Borde cian sutil */
+            box-shadow: 0 0 40px rgba(6, 182, 212, 0.2), 0 0 80px rgba(168, 85, 247, 0.1); /* Doble sombra neón */
+            border-radius: 1.5rem; /* Bordes más redondeados */
+        }
+        /* Clases para texto con efecto neón */
+        .neon-text-cyan {
+            color: #06b6d4; /* Cian neón */
+            text-shadow: 0 0 5px #06b6d4, 0 0 10px #06b6d4;
+        }
+        .neon-text-purple {
+            color: #a855f7; /* Púrpura neón */
+            text-shadow: 0 0 5px #a855f7, 0 0 10px #a855f7;
+        }
+        .neon-text-gold {
+            color: #fbbf24; /* Dorado neón */
+            /* Ajuste para máxima nitidez: sombras muy concentradas y pequeñas */
+            text-shadow: 0 0 1px #fbbf24, 0 0 3px #fbbf24;
+        }
+
+        /* Estilos para el termómetro emocional */
+        .emotion-thermometer-bg {
+            background-color: #374151; /* Fondo del termómetro */
+            border-radius: 0.5rem;
+            overflow: hidden; /* Para contener el gradiente */
+        }
+        .emotion-level {
+            width: 100%;
+            height: 0%; /* Altura inicial en 0 */
+            /* Gradiente que va de rojo (bajo) a verde (alto) */
+            background: linear-gradient(to top, #ef4444 0%, #f97316 30%, #eab308 60%, #22c55e 100%);
+            transition: height 0.8s ease-out; /* Animación suave para el cambio de altura */
+            border-radius: 0.5rem;
+        }
+
+        /* Estilos para los íconos de emoción */
+        .emotion-icon-active {
+            filter: drop-shadow(0 0 8px #fbbf24) drop-shadow(0 0 12px #fbbf24); /* Efecto de brillo para ícono activo */
+            transform: scale(1.1); /* Ligeramente más grande */
+            transition: all 0.3s ease-in-out;
+        }
+        .emotion-icon {
+            font-size: 2.5rem; /* Tamaño de los íconos de emoción */
+            opacity: 0.5; /* Opacidad para los inactivos */
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* Estilos para el indicador de riesgo */
+        .risk-indicator {
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: bold;
+            text-align: center;
+            transition: background-color 0.4s ease-in-out, color 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
+        }
+        .risk-low {
+            background-color: rgba(34, 197, 94, 0.2); /* Verde semitransparente */
+            color: #22c55e; /* Verde brillante */
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+        }
+        .risk-medium {
+            background-color: rgba(234, 179, 8, 0.2); /* Amarillo semitransparente */
+            color: #eab308; /* Amarillo brillante */
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.4);
+        }
+        .risk-high {
+            background-color: rgba(239, 68, 68, 0.2); /* Rojo semitransparente */
+            color: #ef4444; /* Rojo brillante */
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Estilos para el botón de análisis */
+        .analyze-button {
+            background-color: #a855f7; /* Púrpura */
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); /* Sombra de neón */
+            transition: all 0.3s ease-in-out;
+        }
+        .analyze-button:hover:not(:disabled) {
+            background-color: #9333ea; /* Púrpura más oscuro */
+            box-shadow: 0 0 25px rgba(168, 85, 247, 0.8);
+            transform: translateY(-2px);
+        }
+        .analyze-button:disabled {
+            background-color: #6b7280; /* Gris para deshabilitado */
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Animación para el ícono de cerebro IA */
+        .ai-brain-icon {
+            font-size: 3rem;
+            filter: drop-shadow(0 0 5px #06b6d4); /* Sombra de neón cian */
+            animation: pulse 2s infinite alternate; /* Animación de pulsación */
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            100% { transform: scale(1.05); opacity: 1; }
+        }
+
+        /* Estilos para el loader (spinner) */
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #06b6d4; /* Cian */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Estilos para el modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #1a202c;
+            padding: 2.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid rgba(6, 182, 212, 0.5);
+            color: #e2e8f0;
+        }
+        .modal-content h3 {
+            color: #fbbf24;
+            text-shadow: 0 0 5px #fbbf24;
+        }
+        .modal-content p {
+            color: #b0b4b8;
+        }
+        .modal-close-button {
+            background-color: #a855f7;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+        }
+        .modal-close-button:hover {
+            background-color: #9333ea;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+        }
+
+        /* Estilos para la sección de análisis bloqueada */
+        .analyzer-locked {
+            background-color: rgba(251, 191, 36, 0.1); /* Amarillo dorado semitransparente */
+            border: 2px solid #fbbf24; /* Borde dorado */
+            color: #fbbf24; /* Texto dorado */
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="dashboard-card p-8 sm:p-10 md:p-12 w-full max-w-4xl text-white">
+        <!-- Título principal y etiqueta "Impulsado por IA" -->
+        <div class="text-center mb-10">
+            <h1 class="text-4xl sm:text-5xl font-extrabold neon-text-gold mb-2">
+                Analizador de Emociones – Versión Pro
+            </h1>
+            <p class="text-xl sm:text-2xl font-light neon-text-cyan">
+                Impulsado por IA <span class="ai-brain-icon">🧠</span>
+            </p>
+        </div>
+
+        <!-- Contenedor principal del dashboard con diseño de cuadrícula -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <!-- Columna Izquierda: Gráfico de Emociones (Termómetro Emocional) e Íconos -->
+            <div class="lg:col-span-1 flex flex-col items-center p-6 bg-gray-800 rounded-lg shadow-inner-lg border border-gray-700">
+                <h2 class="text-2xl font-bold mb-6 text-gray-200">Estado Emocional Detectado</h2>
+                <div class="emotion-thermometer-bg h-64 w-16 relative mb-6">
+                    <div id="emotion-level-bar" class="emotion-level"></div>
+                </div>
+                <div id="emotion-icons" class="flex flex-col space-y-4">
+                    <!-- Íconos de emociones con colores específicos -->
+                    <span id="emotion-miedo" class="emotion-icon text-red-400" role="img" aria-label="Miedo">😨</span>
+                    <span id="emotion-ansiedad" class="emotion-icon text-orange-400" role="img" aria-label="Ansiedad">😟</span>
+                    <span id="emotion-codicia" class="emotion-icon text-yellow-400" role="img" aria-label="Codicia">🤑</span>
+                    <span id="emotion-euforia" class="emotion-icon text-purple-400" role="img" aria-label="Euforia">🤩</span>
+                    <span id="emotion-calma" class="emotion-icon text-green-400" role="img" aria-label="Calma">😌</span>
+                </div>
+            </div>
+
+            <!-- Columna Central/Derecha: Entrada de Texto, Nivel de Riesgo, Recomendaciones y Resultado del Análisis -->
+            <div class="lg:col-span-2 flex flex-col space-y-8">
+                <!-- Sección de Entrada de Texto y Botón de Análisis -->
+                <div class="p-6 bg-gray-800 rounded-lg shadow-inner-lg border border-gray-700">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-200">Analiza tu Experiencia</h2>
+                    <textarea id="trader-text" class="w-full h-40 bg-gray-900 border-2 border-gray-700 rounded-lg p-4 text-lg text-gray-200 focus:ring-2 focus:ring-cyan-400 focus:outline-none transition" placeholder="Ej: 'Entré tarde por miedo a perder, luego el precio subió sin mí y sentí mucha frustración. En la siguiente operación, arriesgué más para recuperar...'"></textarea>
+                    <div class="mt-6 text-center">
+                        <button id="analyze-button" onclick="performAIAnalysis()" class="analyze-button text-white font-bold py-3 px-8 rounded-lg text-xl">
+                            Analizar mi Emoción (<span id="trial-count">1</span> Uso de Prueba)
+                        </button>
+                    </div>
+                    <div id="loader" class="mt-8 flex justify-center hidden">
+                        <div class="loader"></div>
+                    </div>
+                </div>
+
+                <!-- Sección: Nivel de Riesgo Emocional -->
+                <div class="p-6 bg-gray-800 rounded-lg shadow-inner-lg border border-gray-700">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-200">Nivel de Riesgo Emocional</h2>
+                    <div id="risk-level-indicator" class="risk-indicator text-xl">
+                        Inicia el análisis...
+                    </div>
+                </div>
+
+                <!-- Sección: Recomendaciones Personalizadas -->
+                <div class="p-6 bg-gray-800 rounded-lg shadow-inner-lg border border-gray-700">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-200">Recomendaciones Personalizadas</h2>
+                    <p id="recommendations-text" class="text-gray-300 leading-relaxed">
+                        Aquí verás consejos basados en el análisis de tu texto.
+                    </p>
+                </div>
+
+                <!-- Sección de Resultado Detallado del Análisis de IA -->
+                <div id="analysis-result" class="mt-2 min-h-[5rem] bg-gray-900 border-2 border-gray-700 rounded-lg p-6 text-left text-gray-200 hidden">
+                    <h3 class="text-xl font-bold neon-text-cyan mb-2">Análisis Detallado de IA:</h3>
+                    <p id="ai-full-analysis" class="text-gray-300 leading-relaxed"></p>
+                </div>
+
+                <!-- Sección de Análisis Bloqueado -->
+                <div id="analyzer-locked" class="mt-8 p-8 text-center hidden analyzer-locked">
+                    <h3 class="text-2xl font-bold text-amber-300">¡Análisis Completado!</h3>
+                    <p class="mt-2 text-amber-200">Has usado tus 8 análisis de hoy. Vuelve mañana para más o contacta soporte para la versión ilimitada.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal personalizado -->
+    <div id="custom-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title" class="text-2xl font-bold mb-4"></h3>
+            <p id="modal-message" class="text-gray-700 mb-6"></p>
+            <button onclick="hideModal()" class="modal-close-button">
+                Cerrar
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = ""; // La clave API se inyectará en tiempo de ejecución
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
+        
+        // --- CAMBIO AQUÍ: Límite de usos diarios a 6 ---
+        const MAX_DAILY_USES = 6;
+        // ---------------------------------------------
+        const USES_KEY = 'emotionAnalyzerDailyUses';
+        const LAST_USE_DATE_KEY = 'emotionAnalyzerLastUseDate';
+        
+        let dailyUsesLeft = MAX_DAILY_USES;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toDateString(); // Obtiene la fecha actual sin la hora
+
+            const storedUses = localStorage.getItem(USES_KEY);
+            const storedDate = localStorage.getItem(LAST_USE_DATE_KEY);
+
+            if (storedDate === today) {
+                // Si la fecha almacenada es la de hoy, carga los usos restantes
+                if (storedUses !== null) {
+                    dailyUsesLeft = parseInt(storedUses, 10);
+                } else {
+                    // Si no hay usos almacenados para hoy, se asume el máximo (primer uso del día)
+                    dailyUsesLeft = MAX_DAILY_USES;
+                }
+            } else {
+                // Si es un nuevo día, reinicia los usos y actualiza la fecha
+                dailyUsesLeft = MAX_DAILY_USES;
+                localStorage.setItem(LAST_USE_DATE_KEY, today);
+                localStorage.setItem(USES_KEY, dailyUsesLeft);
+            }
+            updateTrialDisplay();
+        });
+
+        /**
+         * Actualiza el contador de usos de prueba en la interfaz y habilita/deshabilita el botón.
+         */
+        function updateTrialDisplay() {
+            const trialCountSpan = document.getElementById('trial-count');
+            const analyzeButton = document.getElementById('analyze-button');
+            const analyzerLocked = document.getElementById('analyzer-locked');
+
+            trialCountSpan.textContent = dailyUsesLeft;
+            if (dailyUsesLeft <= 0) {
+                analyzeButton.disabled = true;
+                analyzeButton.textContent = 'Análisis (0 Usos Restantes)';
+                // Actualizar el mensaje de bloqueo para reflejar los 6 usos
+                analyzerLocked.querySelector('p').textContent = `Has usado tus ${MAX_DAILY_USES} análisis de hoy. Vuelve mañana para más o contacta soporte para la versión ilimitada.`;
+                analyzerLocked.classList.remove('hidden');
+            } else {
+                analyzeButton.disabled = false;
+                analyzeButton.textContent = `Analizar mi Emoción (${dailyUsesLeft} Uso${dailyUsesLeft !== 1 ? 's' : ''} Restantes Hoy)`;
+                analyzerLocked.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Muestra el modal personalizado con un título y mensaje.
+         * @param {string} title - El título del modal.
+         * @param {string} message - El mensaje del modal.
+         */
+        function showModal(title, message) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            document.getElementById('custom-modal').style.display = 'flex';
+        }
+
+        /**
+         * Oculta el modal personalizado.
+         */
+        function hideModal() {
+            document.getElementById('custom-modal').style.display = 'none';
+        }
+
+        /**
+         * Realiza el análisis emocional del texto usando la IA de Gemini.
+         * Actualiza la interfaz con el resultado, el nivel de riesgo y las recomendaciones.
+         */
+        async function performAIAnalysis() {
+            if (dailyUsesLeft <= 0) {
+                showModal('Análisis Bloqueado', `Has utilizado tus ${MAX_DAILY_USES} usos de hoy. Vuelve mañana para más.`);
+                return;
+            }
+
+            const traderText = document.getElementById('trader-text').value.trim();
+            if (!traderText) {
+                showModal('Entrada Vacía', 'Por favor, describe tu experiencia en el cuadro de texto para analizar tus emociones.');
+                return;
+            }
+
+            const loader = document.getElementById('loader');
+            const analysisResultDiv = document.getElementById('analysis-result');
+            const aiFullAnalysisP = document.getElementById('ai-full-analysis');
+            const analyzeButton = document.getElementById('analyze-button');
+
+            // Mostrar loader y deshabilitar botón
+            loader.classList.remove('hidden');
+            analysisResultDiv.classList.add('hidden');
+            analyzeButton.disabled = true;
+            analyzeButton.textContent = 'Analizando...';
+
+            // Resetear íconos de emoción
+            const emotionIcons = {
+                miedo: document.getElementById('emotion-miedo'),
+                ansiedad: document.getElementById('emotion-ansiedad'),
+                codicia: document.getElementById('emotion-codicia'),
+                euforia: document.getElementById('emotion-euforia'),
+                calma: document.getElementById('emotion-calma'),
+            };
+            Object.values(emotionIcons).forEach(icon => {
+                icon.classList.remove('emotion-icon-active');
+                icon.style.opacity = '0.5';
+                icon.style.filter = 'none';
+                icon.style.transform = 'scale(1)';
+            });
+
+            // Prompt para la IA
+            const prompt = `Analiza el siguiente texto de un trader y proporciona un objeto JSON con las siguientes propiedades:
+            - "dominantEmotion": la emoción principal detectada (solo una de: "Miedo", "Ansiedad", "Codicia", "Euforia", "Calma", "Mixto").
+            - "calmLevel": un número entero de 0 a 100 que representa el nivel de calma/objetividad emocional (0 = pánico/emociones negativas extremas, 100 = total calma/objetividad).
+            - "recommendation": una recomendación concisa y específica para el trading basada en esta emoción y nivel de calma.
+            - "fullAnalysis": una breve explicación (2-3 frases) del porqué se detectó esa emoción y el nivel de calma.
+
+            Texto a analizar: "${traderText}"`;
+
+            let retries = 0;
+            const MAX_RETRIES = 3;
+            const BASE_DELAY = 1000; // 1 segundo
+
+            while (retries < MAX_RETRIES) {
+                try {
+                    const payload = {
+                        contents: [{ role: "user", parts: [{ text: prompt }] }],
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "OBJECT",
+                                properties: {
+                                    "dominantEmotion": { "type": "STRING", "enum": ["Miedo", "Ansiedad", "Codicia", "Euforia", "Calma", "Mixto"] },
+                                    "calmLevel": { "type": "INTEGER", "minimum": 0, "maximum": 100 },
+                                    "recommendation": { "type": "STRING" },
+                                    "fullAnalysis": { "type": "STRING" }
+                                }
+                            }
+                        }
+                    };
+
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+
+                    // Correctly check for nested properties and access 'parts'
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        
+                        const jsonString = result.candidates[0].content.parts[0].text;
+                        const parsedJson = JSON.parse(jsonString);
+
+                        const { dominantEmotion, calmLevel, recommendation, fullAnalysis } = parsedJson;
+
+                        // Actualizar termómetro y íconos de emoción
+                        const emotionLevelBar = document.getElementById('emotion-level-bar');
+                        emotionLevelBar.style.height = `${calmLevel}%`;
+
+                        const emotionMap = {
+                            "Miedo": "miedo", "Ansiedad": "ansiedad", "Codicia": "codicia",
+                            "Euforia": "euforia", "Calma": "calma", "Mixto": "mixto" // Añadir "Mixto" al mapa
+                        };
+                        const mappedEmotion = emotionMap[dominantEmotion];
+                        if (emotionIcons[mappedEmotion]) {
+                            emotionIcons[mappedEmotion].classList.add('emotion-icon-active');
+                            emotionIcons[mappedEmotion].style.opacity = '1';
+                        }
+
+                        // Actualizar Nivel de Riesgo
+                        const riskLevelIndicator = document.getElementById('risk-level-indicator');
+                        let riskClass = '';
+                        let riskText = '';
+                        if (calmLevel <= 30) {
+                            riskText = 'ALTO';
+                            riskClass = 'risk-high';
+                        } else if (calmLevel <= 70) {
+                            riskText = 'MODERADO';
+                            riskClass = 'risk-medium';
+                        } else {
+                            riskText = 'BAJO';
+                            riskClass = 'risk-low';
+                        }
+                        riskLevelIndicator.textContent = `Nivel: ${riskText}`;
+                        riskLevelIndicator.className = `risk-indicator ${riskClass}`;
+
+                        // Actualizar Recomendaciones
+                        document.getElementById('recommendations-text').textContent = recommendation;
+
+                        // Mostrar Análisis Detallado
+                        aiFullAnalysisP.textContent = fullAnalysis;
+                        analysisResultDiv.classList.remove('hidden');
+
+                        // Reducir el uso diario y guardar en localStorage
+                        dailyUsesLeft--;
+                        localStorage.setItem(USES_KEY, dailyUsesLeft);
+                        localStorage.setItem(LAST_USE_DATE_KEY, new Date().toDateString()); // Actualiza la fecha de último uso
+                        updateTrialDisplay();
+
+                        break; // Salir del bucle si es exitoso
+
+                    } else {
+                        throw new Error("Estructura de respuesta inesperada del API o contenido vacío.");
+                    }
+                } catch (error) {
+                    console.error("Error al llamar a la API de Gemini:", error);
+                    retries++;
+                    if (retries < MAX_RETRIES) {
+                        await new Promise(resolve => setTimeout(resolve, BASE_DELAY * Math.pow(2, retries - 1)));
+                    } else {
+                        showModal('Error en el Análisis', 'No se pudo completar el análisis de emociones. Inténtalo de nuevo más tarde.');
+                        // Restaurar el botón y ocultar el loader en caso de error final
+                        analyzeButton.disabled = false;
+                        analyzeButton.textContent = `Analizar mi Emoción (${dailyUsesLeft} Uso${dailyUsesLeft !== 1 ? 's' : ''} Restantes Hoy)`;
+                        loader.classList.add('hidden');
+                        analysisResultDiv.classList.add('hidden');
+                    }
+                }
+            }
+            // Ocultar loader y re-habilitar botón después de todos los reintentos o éxito
+            loader.classList.add('hidden');
+            updateTrialDisplay(); // Actualiza el estado del botón después de la operación
+        }
+
+        // Ejecutar un escaneo inicial (aleatorio) al cargar la página si aún no se ha usado el trial
+        document.addEventListener('DOMContentLoaded', () => {
+            if (dailyUsesLeft > 0) {
+                // Initial random state if trial is available
+                const emotionalScore = Math.floor(Math.random() * 101);
+                document.getElementById('emotion-level-bar').style.height = `${emotionalScore}%`;
+                updateInitialEmotionalState(emotionalScore);
+            } else {
+                // If trial is used, ensure UI reflects locked state
+                document.getElementById('emotion-level-bar').style.height = '0%'; // Reset thermometer
+                document.getElementById('risk-level-indicator').textContent = 'Análisis bloqueado';
+                document.getElementById('risk-level-indicator').className = 'risk-indicator result-neutral';
+                document.getElementById('recommendations-text').textContent = `Has usado tus ${MAX_DAILY_USES} análisis de hoy. Vuelve mañana para más.`;
+                document.getElementById('analysis-result').classList.add('hidden');
+            }
+        });
+
+        // Helper function for initial random state if trial is available
+        function updateInitialEmotionalState(emotionalScore) {
+            const riskLevelIndicator = document.getElementById('risk-level-indicator');
+            const recommendationsText = document.getElementById('recommendations-text');
+            const emotionIcons = {
+                miedo: document.getElementById('emotion-miedo'),
+                ansiedad: document.getElementById('emotion-ansiedad'),
+                codicia: document.getElementById('emotion-codicia'),
+                euforia: document.getElementById('emotion-euforia'),
+                calma: document.getElementById('emotion-calma'),
+            };
+
+            // Determina la emoción dominante basada en el puntaje y la resalta
+            let dominantEmotion = '';
+            if (emotionalScore < 20) {
+                dominantEmotion = 'miedo';
+            } else if (emotionalScore < 40) {
+                dominantEmotion = 'ansiedad';
+            } else if (emotionalScore < 60) {
+                dominantEmotion = 'codicia';
+            } else if (emotionalScore < 80) {
+                dominantEmotion = 'euforia';
+            } else {
+                dominantEmotion = 'calma';
+            }
+
+            Object.values(emotionIcons).forEach(icon => {
+                icon.classList.remove('emotion-icon-active');
+                icon.style.opacity = '0.5';
+                icon.style.filter = 'none';
+                icon.style.transform = 'scale(1)';
+            });
+
+            if (emotionIcons[dominantEmotion]) {
+                emotionIcons[dominantEmotion].classList.add('emotion-icon-active');
+                emotionIcons[dominantEmotion].style.opacity = '1';
+            }
+
+            let riskLevel = '';
+            let recommendation = '';
+            let riskClass = '';
+
+            if (emotionalScore <= 30) {
+                riskLevel = 'ALTO';
+                recommendation = 'Nivel emocional crítico. El miedo o la ansiedad pueden llevar a decisiones impulsivas. Considera una pausa y un ejercicio de respiración profunda.';
+                riskClass = 'risk-high';
+            } else if (emotionalScore <= 70) {
+                riskLevel = 'MODERADO';
+                recommendation = 'Tu estado es manejable, pero la codicia o euforia pueden distorsionar tu juicio. Mantén la objetividad y sigue tu plan de trading estrictamente.';
+                riskClass = 'risk-medium';
+            } else {
+                riskLevel = 'BAJO';
+                recommendation = 'Excelente estado emocional. Estás en óptimas condiciones para ejecutar tu plan de trading con disciplina y claridad. ¡Adelante con precaución!';
+                riskClass = 'risk-low';
+            }
+
+            riskLevelIndicator.textContent = `Nivel: ${riskLevel}`;
+            riskLevelIndicator.className = `risk-indicator ${riskClass}`;
+            recommendationsText.textContent = recommendation;
+        }
+    </script>
+</body>
+</html>
