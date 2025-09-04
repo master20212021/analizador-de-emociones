@@ -3,790 +3,1697 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analizador de Emociones – Versión Pro</title>
+    <title>Analizador de Emociones & Diario de Trading</title>
     <!-- Incluye Tailwind CSS desde CDN para estilos minimalistas y responsivos -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
-    <!-- Font Awesome para íconos de redes sociales y de contenido -->
+    <!-- Font Awesome para íconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Chart.js para los gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Estilos base para el cuerpo, consistentes con las otras páginas */
+        :root {
+            --bg-primary: #030712;
+            --bg-secondary: #1F2937;
+            --bg-tertiary: #111827;
+            --bg-input: #4A5568;
+            --text-primary: #E5E7EB;
+            --text-secondary: #9CA3AF;
+            --border-color: #374151;
+            --accent-color: #22D3EE;
+        }
+
+        .light-mode {
+            --bg-primary: #F9FAFB;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #F3F4F6;
+            --bg-input: #D1D5DB;
+            --text-primary: #111827;
+            --text-secondary: #4B5563;
+            --border-color: #E5E7EB;
+            --accent-color: #0891B2;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #030712; /* Fondo casi negro consistente */
-            color: #E5E7EB; /* Texto gris claro consistente */
-            overflow-x: hidden; /* Evita scroll horizontal */
-            min-height: 100vh; /* Asegura que el body ocupe al menos la altura completa del viewport */
-            display: flex; /* Convierte el body en un flex container */
-            flex-direction: column; /* Apila los hijos verticalmente */
-            align-items: center; /* Centra los hijos horizontalmente si no ocupan todo el ancho */
-            padding: 0; /* Elimina padding directo del body para aplicarlo en el contenedor de contenido */
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 2rem 1rem 80px 1rem;
+            transition: background-color 0.3s, color 0.3s;
         }
-        /* Grano/Ruido sutil para el fondo, copiado de la landing page */
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAAD9gGz5AAAAAXNSR0IB2cksfwAAAAlwSFlzAAAWJQAAFiUAUFXgxwAAABhQTFRFAAAAsND/sND/sND/sND/sND/sND/sND/sND/jQ0vAAAACnRSTlMAAAAA+wD49z8nBA+MvK+1nQAAABpJREFUeJxjYmBgZGSAjYAAhjFGEGAABgBcA1M77D2NwgAAAABJRU5ErkJggg=='); /* Pequeña imagen de grano */
-            background-repeat: repeat;
-            opacity: 0.02; /* Muy baja opacidad */
-            pointer-events: none; /* Asegura que no interfiera con interacciones */
-            z-index: -1;
-        }
-
-        /* Define una variable CSS para la fuente del encabezado */
-        :root {
-            --heading-font: 'Montserrat', sans-serif; /* Montserrat aplicada por defecto ahora */
-        }
-
-        /* Aplica la fuente Montserrat a todos los h1 y h2 */
-        h1, h2 {
-            font-family: var(--heading-font);
-        }
-
-        /* Estilo para la tarjeta principal del dashboard, con bordes y sombras neón */
-        .dashboard-card {
-            background-color: #1a202c; /* Fondo oscuro para la tarjeta */
-            border: 1px solid rgba(6, 182, 212, 0.3); /* Borde cian sutil */
-            box-shadow: 0 0 40px rgba(6, 182, 212, 0.2), 0 0 80px rgba(168, 85, 247, 0.1); /* Doble sombra neón */
-            border-radius: 1.5rem; /* Bordes más redondeados */
-            /* section-glow from other modules */
-            box-shadow:
-                0 0 40px rgba(34, 211, 238, 0.1), /* Sombra principal más fuerte */
-                0 0 80px rgba(34, 211, 238, 0.05), /* Sombra de halo exterior */
-                0 0 120px rgba(6, 182, 212, 0.03); /* Sombra más difusa */
-            transition: box-shadow 0.5s ease-in-out; /* Transición suave para el brillo */
-        }
-        .dashboard-card:hover {
-            box-shadow:
-                0 0 60px rgba(34, 211, 238, 0.15),
-                0 0 100px rgba(34, 211, 238, 0.08),
-                0 0 150px rgba(6, 182, 212, 0.05);
-        }
-
-        /* Clases para texto con efecto neón */
-        .neon-text-cyan {
-            color: #06b6d4; /* Cian neón */
-            text-shadow: 0 0 5px #06b6d4, 0 0 10px #06b6d4;
-        }
-        .neon-text-purple {
-            color: #a855f7; /* Púrpura neón */
-            text-shadow: 0 0 5px #a855f7, 0 0 10px #a855f7;
-        }
-        .neon-text-gold {
-            color: #fbbf24; /* Dorado neón */
-            text-shadow: 0 0 5px #fbbf24, 0 0 10px #fbbf24;
-        }
-
-        /* Estilos para el termómetro emocional */
-        .emotion-thermometer-bg {
-            background-color: #374151; /* Fondo del termómetro */
-            border-radius: 0.5rem;
-            overflow: hidden; /* Para contener el gradiente */
-            height: 16rem; /* fixed height for thermometer */
-        }
-        .emotion-level {
-            width: 100%;
-            height: 0%; /* Altura inicial en 0 */
-            /* Gradiente que va de rojo (bajo) a verde (alto) */
-            background: linear-gradient(to top, #ef4444 0%, #f97316 30%, #eab308 60%, #22c55e 100%);
-            transition: height 0.8s ease-out; /* Animación suave para el cambio de altura */
-            border-radius: 0.5rem;
-        }
-
-        /* Estilos para los íconos de emoción */
-        .emotion-icon-active {
-            filter: drop-shadow(0 0 8px #fbbf24) drop-shadow(0 0 12px #fbbf24); /* Efecto de brillo para ícono activo */
-            transform: scale(1.1); /* Ligeramente más grande */
+        .soft-border {
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease-in-out;
         }
-        .emotion-icon {
-            font-size: 2.5rem; /* Tamaño de los íconos de emoción */
-            opacity: 0.5; /* Opacidad para los inactivos */
-            transition: all 0.3s ease-in-out;
-            margin-top: 0.5rem; /* Added margin for spacing */
-        }
-
-        /* Estilos para el indicador de riesgo */
-        .risk-indicator {
-            padding: 1rem 1.5rem;
-            border-radius: 0.75rem;
-            font-weight: bold;
-            text-align: center;
-            transition: background-color 0.4s ease-in-out, color 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
-        }
-        .risk-low {
-            background-color: rgba(34, 197, 94, 0.2); /* Verde semitransparente */
-            color: #22c55e; /* Verde brillante */
-            box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
-        }
-        .risk-medium {
-            background-color: rgba(234, 179, 8, 0.2); /* Amarillo semitransparente */
-            color: #eab308; /* Amarillo brillante */
-            box-shadow: 0 0 15px rgba(234, 179, 8, 0.4);
-        }
-        .risk-high {
-            background-color: rgba(239, 68, 68, 0.2); /* Rojo semitransparente */
-            color: #ef4444; /* Rojo brillante */
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
-        }
-
-        /* Estilos para el botón de análisis */
-        .analyze-button {
-            background-color: #a855f7; /* Púrpura */
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); /* Sombra de neón */
-            transition: all 0.3s ease-in-out;
-        }
-        .analyze-button:hover:not(:disabled) {
-            background-color: #9333ea; /* Púrpura más oscuro */
-            box-shadow: 0 0 25px rgba(168, 85, 247, 0.8);
+        .soft-border:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
             transform: translateY(-2px);
         }
-        .analyze-button:disabled {
-            background-color: #6b7280; /* Gris para deshabilitado */
-            box-shadow: none;
-            cursor: not-allowed;
+        textarea, input, select {
+             background-color: var(--bg-input) !important;
+             color: var(--text-primary) !important;
+             border: 1px solid var(--border-color) !important;
         }
-
-        /* Animación para el ícono de cerebro IA */
-        .ai-brain-icon {
-            font-size: 3rem;
-            filter: drop-shadow(0 0 5px #06b6d4); /* Sombra de neón cian */
-            animation: pulse 2s infinite alternate; /* Animación de pulsación */
+        textarea:focus, input:focus, select:focus {
+            outline: none;
+            box-shadow: 0 0 8px #4F46E5;
         }
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.7; }
-            100% { transform: scale(1.05); opacity: 1; }
+        .premium-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.4);
         }
-
-        /* Estilos para el loader (spinner) */
         .loader {
             border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid #06b6d4; /* Cian */
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            border-top: 4px solid #E5E7EB;
+            width: 24px;
+            height: 24px;
+            -webkit-animation: spin 1s linear infinite;
             animation: spin 1s linear infinite;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        /* Estilos para el modal */
-        .modal {
-            display: none;
+        .modal-overlay {
             position: fixed;
-            z-index: 1000;
-            left: 0;
             top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.7);
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-content {
-            background-color: #1a202c;
-            padding: 2.5rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            border: 1px solid rgba(6, 182, 212, 0.5);
-            color: #e2e8f0;
-        }
-        .modal-content h3 {
-            color: #fbbf24;
-            text-shadow: 0 0 5px #fbbf24;
-        }
-        .modal-content p {
-            color: #b0b4b8;
-        }
-        .modal-close-button {
-            background-color: #a855f7;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: bold;
-            transition: background-color 0.2s, box-shadow 0.2s;
-            box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
-        }
-        .modal-close-button:hover {
-            background-color: #9333ea;
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
-        }
-
-        /* Estilos para la sección de análisis bloqueada */
-        .analyzer-locked {
-            background-color: rgba(251, 191, 36, 0.1); /* Amarillo dorado semitransparente */
-            border: 2px solid #fbbf24; /* Borde dorado */
-            color: #fbbf24; /* Texto dorado */
-            box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
-        }
-
-        /* Estilo para el logo de la aplicación principal */
-        .logo-container {
+            background-color: rgba(0, 0, 0, 0.7);
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 1rem; /* Espacio antes del título */
+            z-index: 1000;
         }
-        .logo-container img {
-            max-width: 100px; /* Tamaño máximo del logo */
-            height: auto;
-            margin-right: 1rem; /* Espacio entre el logo y el título */
-            filter: drop-shadow(0 0 5px rgba(6, 182, 212, 0.5)); /* Efecto sutil neón para el logo */
-        }
-
-        /* Estilos para el pie de página */
-        .app-footer {
-            margin-top: 2.5rem; /* Espacio superior para separar del contenido */
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(6, 182, 212, 0.2); /* Línea divisoria cian sutil */
+        .modal-content {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.5);
+            max-width: 90%;
+            width: 400px;
             text-align: center;
-            color: #94a3b8; /* Gris azulado para el texto del pie de página */
-            font-size: 0.875rem; /* Texto más pequeño */
-        }
-        .app-footer .academy-logo {
-            max-width: 80px; /* Tamaño del logo de la academia */
-            height: auto;
-            margin: 0 auto 0.75rem auto; /* Centrar y añadir margen inferior */
-            opacity: 0.7; /* Ligeramente más tenue para el pie de página */
-            filter: drop-shadow(0 0 5px rgba(6, 182, 212, 0.5)); /* Mismo efecto sutil neón para el logo del pie de página */
-        }
-        .app-footer p {
-            margin-bottom: 0.5rem; /* Espacio debajo del párrafo */
+            border: 2px solid #4F46E5;
         }
         .social-icon {
-            font-size: 1.8rem; /* Tamaño del ícono por defecto en footer */
-            color: #E5E7EB; /* Color por defecto */
+            font-size: 1.8rem;
+            color: var(--text-primary);
             transition: color 0.3s ease, transform 0.3s ease;
         }
         .social-icon:hover {
-            transform: translateY(-3px) scale(1.1); /* Efecto de elevación y escala sutil */
+            transform: translateY(-3px) scale(1.1);
         }
-        .social-icon.header-social {
-            font-size: 2.8rem; /* Tamaño más grande para íconos en el header */
+        .social-icon.fa-telegram:hover { color: #0088CC; }
+        .social-icon.fa-instagram:hover { color: #E4405F; }
+        .social-icon.fa-facebook:hover { color: #1877F2; }
+        .social-icon.fa-tiktok:hover { color: #69C9D0; }
+        .scale-input {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: var(--bg-input);
+            outline: none;
+            border-radius: 4px;
+            transition: opacity .2s;
         }
-        .social-icon.fa-telegram:hover {
-            color: #0088CC; /* Color de Telegram */
+        .scale-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: var(--accent-color);
+            cursor: pointer;
+            border-radius: 50%;
+            border: 4px solid var(--bg-tertiary);
         }
-        .social-icon.fa-instagram:hover {
-            color: #E4405F; /* Color de Instagram */
+        .scale-input::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: var(--accent-color);
+            cursor: pointer;
+            border-radius: 50%;
+            border: 4px solid var(--bg-tertiary);
         }
-        .social-icon.fa-facebook:hover {
-            color: #1877F2; /* Color de Facebook */
+        .section-glow {
+            box-shadow:
+                0 0 40px rgba(34, 211, 238, 0.1),
+                0 0 80px rgba(34, 211, 238, 0.05),
+                0 0 120px rgba(6, 182, 212, 0.03);
+            border-radius: 1.5rem;
+            overflow: hidden;
+            transition: box-shadow 0.5s ease-in-out;
         }
-        .social-icon.fa-tiktok:hover {
-            color: #69C9D0; /* Color de TikTok (principal) */
+        .result-box {
+            background-color: var(--bg-tertiary);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.5s ease-in-out;
+            transform: scale(0.9);
+            opacity: 0;
         }
+        .result-box.active {
+            transform: scale(1);
+            opacity: 1;
+        }
+        .card-operation, .checklist-item {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+        }
+        .card-operation {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease;
+        }
+        .checklist-item input[type="checkbox"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background-color: var(--bg-input);
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+        }
+        .checklist-item input[type="checkbox"]:checked {
+            background-color: #34D399;
+        }
+        .checklist-item input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #111827;
+            font-weight: bold;
+        }
+        .nav-item {
+            transition: color 0.3s ease, transform 0.2s ease;
+            position: relative;
+        }
+        .nav-item:hover {
+            transform: translateY(-2px);
+        }
+        .nav-item.active {
+            transform: scale(1.05);
+        }
+        .nav-item .lock-icon {
+            position: absolute;
+            top: -5px;
+            right: 10px;
+            font-size: 0.7rem;
+            color: #f59e0b;
+        }
+        /* Generic background colors */
+        .bg-gray-800 { background-color: var(--bg-secondary); }
+        .bg-gray-900\/80 { background-color: rgba(31, 41, 55, 0.8); }
+        .light-mode .bg-gray-900\/80 { background-color: rgba(255, 255, 255, 0.8); }
+        .bg-gray-700 { background-color: var(--bg-tertiary); }
+        .bg-gray-900 { background-color: var(--bg-primary); }
+        
+        .plan-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .plan-card.premium {
+            border-color: #f59e0b;
+        }
+
     </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex flex-col">
-    <!-- Contenedor principal para el header y main, para controlar el centrado y padding -->
-    <div class="flex-grow w-full max-w-4xl mx-auto p-4 sm:p-8">
-        <header class="text-center py-8 bg-gray-800 rounded-2xl dashboard-card mb-10">
-            <!-- Logo al principio de la página -->
-            <img src="https://i.postimg.cc/nVW2PvKM/logo-png-oficial-fondo-trasparente.png" alt="Logo para_traders_" class="mx-auto h-24 w-auto mb-6 opacity-90">
-
-            <p class="text-lg font-semibold text-emerald-400 uppercase">HERRAMIENTA CLAVE</p>
-            <h1 class="text-4xl md:text-5xl font-black mt-2">Analizador de Emociones – Versión Pro</h1>
-
-            <!-- Redes Sociales en Header -->
-            <div class="flex justify-center space-x-8 mt-8 mb-4">
-                <a href="https://t.me/erostrading" target="_blank" rel="noopener noreferrer" aria-label="Telegram de para_traders_">
-                    <i class="fab fa-telegram header-social social-icon text-gray-300 hover:text-cyan-400"></i>
-                </a>
-                <a href="https://www.instagram.com/para_traders__?igsh=MXd0eGdtZ3ZnaWJxag==" target="_blank" rel="noopener noreferrer" aria-label="Instagram de para_traders_">
-                    <i class="fab fa-instagram header-social social-icon text-gray-300 hover:text-pink-500"></i>
-                </a>
-                <a href="https://www.facebook.com/paraltraders" target="_blank" rel="noopener noreferrer" aria-label="Facebook de para_traders_">
-                    <i class="fab fa-facebook header-social social-icon text-gray-300 hover:text-blue-600"></i>
-                </a>
-                <a href="https://www.tiktok.com/@para_traders?_t=ZT-8yicg47qPio&_r=1" target="_blank" rel="noopener noreferrer" aria-label="TikTok de para_traders_">
-                    <i class="fab fa-tiktok header-social social-icon text-gray-300 hover:text-teal-400"></i>
-                </a>
-            </div>
-        </header>
-
-        <main class="space-y-10">
-            <div class="dashboard-card p-8 sm:p-10 md:p-12 w-full text-white">
-                <!-- Título principal y etiqueta "Impulsado por IA" -->
-                <div class="text-center mb-10">
-                    <p class="text-xl sm:text-2xl font-light neon-text-cyan mt-2">
-                        Impulsado por IA <span class="ai-brain-icon">🧠</span>
-                    </p>
+<body class="bg-gray-950 text-gray-200 min-h-screen flex flex-col items-center p-4">
+    <!-- Contenedor de la aplicación principal -->
+    <div id="app-container" class="flex-grow w-full max-w-4xl mx-auto">
+        <!-- Contenedor para el Analizador de Emociones -->
+        <div id="analyzer-section">
+            <!-- Encabezado de la página -->
+            <header class="w-full max-w-4xl text-center mb-8">
+                 <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-blue-400 mb-2 font-['Montserrat'] leading-tight tracking-wider">
+                    <span id="welcome-message" data-lang-key="analyzerTitle">Analizador de Emociones</span>
+                </h1>
+                <div id="user-info" class="mt-4 hidden">
+                    <p class="text-sm text-gray-400"><span data-lang-key="userIdLabel">ID de Usuario</span>: <span id="user-id" class="text-blue-300 font-bold break-all">Cargando...</span></p>
                 </div>
+                <div id="usage-info" class="mt-2 text-sm text-gray-400">
+                    <p><span data-lang-key="dailyAnalyses">Análisis Diarios Usados</span>: <span id="analyses-count" class="font-bold text-cyan-300">0</span> / <span id="analyses-limit" class="font-bold text-cyan-300">2</span></p>
+                </div>
+            </header>
 
-                <!-- Contenedor principal del dashboard con diseño de cuadrícula -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                    <!-- Columna Izquierda: Gráfico de Emociones (Termómetro Emocional) e Íconos -->
-                    <div class="lg:col-span-1 flex flex-col items-center p-6 bg-gray-800 rounded-lg shadow-inner-lg border border-gray-700">
-                        <h2 class="text-2xl font-bold mb-6 text-gray-200">Estado Emocional Detectado</h2>
-                        <div class="emotion-thermometer-bg h-64 w-16 relative mb-6">
-                            <div id="emotion-level-bar" class="emotion-level"></div>
+            <!-- Contenido principal -->
+            <main class="w-full max-w-4xl space-y-8 md:space-y-12 mb-8">
+                <!-- Panel de entrada de texto -->
+                <section id="input-section" class="bg-gray-800 p-6 rounded-2xl soft-border shadow-2xl">
+                    <h2 class="text-2xl font-bold mb-4 text-center text-blue-300" data-lang-key="analyzerPanelTitle">Analiza tu Experiencia</h2>
+                    <textarea id="trading-experience" rows="6" class="w-full p-4 rounded-xl bg-gray-700 text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-indigo-400 transition-all duration-300 resize-none" data-lang-key-placeholder="analyzerPlaceholder"></textarea>
+                    
+                    <div class="mt-4 text-center flex flex-col items-center gap-4">
+                        <!-- Botón de Análisis principal -->
+                        <button id="analyze-button" class="premium-btn w-full sm:w-auto px-8 py-3 rounded-full text-lg font-bold text-white bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span id="button-text" data-lang-key="analyzeButton">Analizar con IA</span>
+                            <div id="loader" class="loader hidden"></div>
+                        </button>
+
+                        <!-- Contenedor de Resultados (aparece aquí) -->
+                        <div id="results-wrapper" class="w-full max-w-3xl overflow-hidden transition-all duration-700 ease-in-out" style="max-height: 0px;">
+                            <section id="results-section" class="bg-gray-900/50 p-6 rounded-2xl mt-4">
+                                <h2 class="text-2xl font-bold mb-4 text-center text-blue-300" data-lang-key="resultsTitle">Resultados del Análisis</h2>
+                                <div id="results-content" class="space-y-6">
+                                    <!-- Emojis de Emoción Dominante -->
+                                    <div class="flex flex-wrap justify-center items-center gap-4 text-5xl md:text-6xl" id="emotion-emojis">
+                                        <!-- Los emojis se insertan aquí dinámicamente -->
+                                    </div>
+                                    <div id="dominant-emotion-container" class="text-center mt-2">
+                                        <p id="dominant-emotion-display" class="text-lg font-semibold text-blue-200"></p>
+                                    </div>
+            
+                                    <!-- Nivel de Riesgo Emocional -->
+                                    <div class="text-center">
+                                        <h4 class="text-gray-400 font-semibold text-sm mb-2" data-lang-key="riskLevelLabel">Nivel de Riesgo Emocional</h4>
+                                        <p id="risk-level-display" class="text-xl md:text-2xl font-bold text-blue-300"></p>
+                                    </div>
+                                    
+                                    <!-- Recomendaciones Personalizadas -->
+                                    <div class="p-4 rounded-xl bg-gray-700 text-center">
+                                        <h4 class="text-gray-400 font-semibold text-sm mb-2" data-lang-key="recommendationsLabel">Recomendaciones Personalizadas</h4>
+                                        <p id="recommendation-display" class="text-base text-gray-200"></p>
+                                    </div>
+                                </div>
+                            </section>
                         </div>
-                        <div id="emotion-icons" class="flex flex-col space-y-4">
-                            <!-- Íconos de emociones con colores específicos -->
-                            <span id="emotion-miedo" class="emotion-icon text-red-400" role="img" aria-label="Miedo">😨</span>
-                            <span id="emotion-ansiedad" class="emotion-icon text-orange-400" role="img" aria-label="Ansiedad">😟</span>
-                            <span id="emotion-codicia" class="emotion-icon text-yellow-400" role="img" aria-label="Codicia">🤑</span>
-                            <span id="emotion-euforia" class="emotion-icon text-purple-400" role="img" aria-label="Euforia">🤩</span>
-                            <span id="emotion-calma" class="emotion-icon text-green-400" role="img" aria-label="Calma">😌</span>
+                        
+                        <!-- Contenedor de otras herramientas (se desliza hacia abajo) -->
+                        <div id="other-tools-container" class="w-full flex flex-col sm:flex-row justify-center gap-4 transition-all duration-500 ease-in-out">
+                            <button id="checklist-button" class="premium-btn w-full sm:w-auto px-8 py-3 rounded-full text-lg font-bold text-white bg-purple-600 hover:bg-purple-500 transition-all duration-300 transform hover:scale-105" data-lang-key="preTradeChecklistButton">
+                                Checklist Pre-Operación
+                            </button>
                         </div>
                     </div>
+                </section>
+                
+                <!-- Nuevo Panel de Resumen Emocional General -->
+                <section id="general-summary-section" class="bg-gray-800 p-6 rounded-2xl soft-border hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-center text-blue-300" data-lang-key="generalSummaryTitle">Resumen Emocional General</h2>
+                    <div id="general-summary-content" class="text-center">
+                        <!-- El contenido se inserta dinámicamente -->
+                    </div>
+                </section>
+                
+            </main>
+        </div>
 
-                    <!-- Columna Central/Derecha: Entrada de Texto, Nivel de Riesgo, Recomendaciones y Resultado del Análisis -->
-                    <div class="lg:col-span-2 flex flex-col space-y-8">
-                        <!-- Sección de Entrada de Texto y Botón de Análisis -->
-                        <div class="p-6 bg-gray-800 rounded-lg shadow-inner-lg border border-gray-700">
-                            <h2 class="text-2xl font-bold mb-4 text-gray-200">Analiza tu Experiencia</h2>
-                            <textarea id="trader-text" class="w-full h-40 bg-gray-900 border-2 border-gray-700 rounded-lg p-4 text-lg text-gray-200 focus:ring-2 focus:ring-cyan-400 focus:outline-none transition" placeholder="Ej: 'Entré tarde por miedo a perder, luego el precio subió sin mí y sentí mucha frustración. En la siguiente operación, arriesgué más para recuperar...'"></textarea>
-                            <div class="mt-6 text-center">
-                                <button id="analyze-button" onclick="performAIAnalysis()" class="analyze-button text-white font-bold py-3 px-8 rounded-lg text-xl">
-                                    Analizar mi Emoción (<span id="trial-count"></span> Uso de Prueba)
-                                </button>
-                            </div>
-                            <div id="loader" class="mt-8 flex justify-center hidden">
-                                <div class="loader"></div>
-                            </div>
+        <!-- Contenedor para el Test de Mentalidad -->
+        <div id="mental-test-section" class="hidden">
+            <header class="text-center py-8 mb-10">
+                <p class="text-lg font-semibold text-cyan-400 uppercase" data-lang-key="mindsetTestSubHeader">HERRAMIENTA PSICOLÓGICA</p>
+                <h1 class="text-4xl md:text-5xl font-black mt-2 font-['Montserrat']" data-lang-key="mindsetTestHeader">Test de Mentalidad</h1>
+            </header>
+            <main class="space-y-10">
+                <section id="test-mentalidad" class="bg-gray-800 p-6 sm:p-8 rounded-2xl border border-gray-700 section-glow">
+                    <h2 class="text-3xl font-bold mb-6 flex items-center gap-3"><span class="text-4xl">🧠</span> <span data-lang-key="mindsetTestTitle">Test de Mentalidad</span></h2>
+                    <p class="text-gray-400 mb-8" data-lang-key="mindsetTestDescription">Evalúa cada afirmación en una escala de 1 (totalmente en desacuerdo) a 5 (totalmente de acuerdo).</p>
+                    <div id="questions-container" class="space-y-6"></div>
+                    
+                    <div class="mt-8 text-center">
+                        <button id="submit-test-button" class="premium-btn w-full sm:w-auto px-8 py-3 rounded-full text-lg font-bold text-white bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 transition-all duration-300 transform hover:scale-105" data-lang-key="submitTestButton">
+                            Enviar Test
+                        </button>
+                    </div>
+
+                    <div id="test-results-container" class="result-box mt-8">
+                        <h3 class="text-2xl font-bold mb-4" data-lang-key="mindsetProfileTitle">Tu Perfil de Mentalidad</h3>
+                        
+                        <!-- Gauge visual -->
+                        <div class="relative w-48 h-24 mx-auto mb-4">
+                             <div class="absolute top-0 left-0 w-full h-full border-t-8 border-l-8 border-r-8 border-gray-600 rounded-t-full" style="border-bottom: none;"></div>
+                             <div class="absolute top-0 left-0 w-full h-full overflow-hidden rounded-t-full">
+                                <div class="absolute bottom-0 left-0 w-full h-full bg-gradient-to-r from-green-400 via-yellow-400 to-red-500 origin-bottom transform" style="transform: rotate(0deg);"></div>
+                             </div>
+                             <div id="gauge-needle" class="absolute bottom-0 left-1/2 w-1 h-20 bg-white rounded-t-full origin-bottom transition-transform duration-1000" style="transform: translateX(-50%) rotate(0deg);"></div>
+                             <div class="absolute bottom-0 left-1/2 w-4 h-4 bg-gray-900 border-2 border-white rounded-full transform -translate-x-1/2 translate-y-1/2"></div>
                         </div>
-
-                        <!-- Sección: Nivel de Riesgo Emocional -->
-                        <div class="p-6 bg-gray-800 rounded-lg shadow-inner-lg border border-gray-700">
-                            <h2 class="text-2xl font-bold mb-4 text-gray-200">Nivel de Riesgo Emocional</h2>
-                            <div id="risk-level-indicator" class="risk-indicator text-xl">
-                                Inicia el análisis...
-                            </div>
-                        </div>
-
-                        <!-- Sección: Recomendaciones Personalizadas -->
-                        <div class="p-6 bg-gray-800 rounded-lg shadow-inner-lg border border-gray-700">
-                            <h2 class="text-2xl font-bold mb-4 text-gray-200">Recomendaciones Personalizadas</h2>
-                            <p id="recommendations-text" class="text-gray-300 leading-relaxed">
-                                Aquí verás consejos basados en el análisis de tu texto.
-                            </p>
-                        </div>
-
-                        <!-- Sección de Resultado Detallado del Análisis de IA -->
-                        <div id="analysis-result" class="mt-2 min-h-[5rem] bg-gray-900 border-2 border-gray-700 rounded-lg p-6 text-left text-gray-200 hidden">
-                            <h3 class="text-xl font-bold neon-text-cyan mb-2">Análisis Detallado de IA:</h3>
-                            <p id="ai-full-analysis" class="text-gray-300 leading-relaxed"></p>
-                        </div>
-
-                        <!-- Sección de Análisis Bloqueado -->
-                        <div id="analyzer-locked" class="mt-8 p-8 text-center hidden analyzer-locked">
-                            <h3 class="text-2xl font-bold text-amber-300">¡Análisis Completado!</h3>
-                            <p class="mt-2 text-amber-200">Has usado tus 8 análisis de hoy. Vuelve mañana para más o contacta soporte para la versión ilimitada.</p>
+                        
+                        <p class="text-xl font-bold"><span data-lang-key="totalScoreLabel">Puntaje Total</span>: <span id="total-score" class="text-cyan-400">0</span></p>
+                        <div id="result-interpretation" class="mt-2 text-lg font-semibold h-auto"></div>
+                        
+                        <div id="result-details" class="mt-6 text-left max-w-md mx-auto p-4 bg-gray-900 rounded-lg border border-gray-700">
+                            <!-- Detailed feedback will be inserted here -->
                         </div>
                     </div>
-                </div>
+                </section>
+            </main>
+        </div>
 
-                <!-- Nueva Sección: Resumen Emocional General -->
-                <div id="overall-emotional-summary" class="mt-8 p-6 bg-gray-800 rounded-lg shadow-inner-lg border border-gray-700">
-                    <h2 class="text-2xl font-bold mb-4 text-gray-200">Resumen Emocional General</h2>
-                    <p id="overall-summary-text" class="text-gray-300 leading-relaxed">
-                        Se necesitan al menos 3 análisis para generar un resumen emocional general.
-                    </p>
+        <!-- Contenedor para el Diario de Trading -->
+        <div id="trading-journal-section" class="hidden">
+            <header class="text-center py-8 mb-10">
+                <p class="text-lg font-semibold text-emerald-400 uppercase" data-lang-key="journalSubHeader">HERRAMIENTA DE SEGUIMIENTO</p>
+                <h1 class="text-4xl md:text-5xl font-black mt-2 font-['Montserrat']" data-lang-key="journalHeader">Diario de Trading</h1>
+            </header>
+            <main class="space-y-10">
+                <!-- Dashboard de Análisis -->
+                <section class="bg-gray-800 p-6 sm:p-8 rounded-2xl border border-gray-700 section-glow">
+                    <h2 class="text-2xl font-bold mb-6 text-emerald-300 flex items-center gap-3"><span class="text-3xl">📊</span><span data-lang-key="dashboardTitle">Tu Dashboard de Trading</span></h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="bg-gray-900 p-4 rounded-xl border border-gray-700">
+                            <h3 class="text-xl font-bold text-center mb-4" data-lang-key="emotionsChartTitle">Emociones</h3>
+                            <canvas id="emotion-chart"></canvas>
+                        </div>
+                        <div class="bg-gray-900 p-4 rounded-xl border border-gray-700">
+                            <h3 class="text-xl font-bold text-center mb-4" data-lang-key="performanceChartTitle">Rendimiento</h3>
+                            <canvas id="pnl-chart"></canvas>
+                        </div>
+                    </div>
+                    <div id="ai-insights" class="bg-gray-900 p-4 rounded-xl border border-gray-700 mt-8">
+                        <h3 class="text-xl font-bold text-center mb-4 text-blue-300" data-lang-key="aiAnalysisTitle">Análisis con IA</h3>
+                        <p id="ai-summary" class="text-center text-gray-400 italic" data-lang-key="notEnoughData"></p>
+                    </div>
+                </section>
+
+                <!-- Formulario de registro -->
+                <section class="bg-gray-800 p-6 sm:p-8 rounded-2xl border border-gray-700 section-glow">
+                    <h2 class="text-2xl font-bold mb-6 text-emerald-300 flex items-center gap-3"><span class="text-3xl">✍️</span><span data-lang-key="logTradeTitle">Registra una Operación</span></h2>
+                    <form id="trading-journal-form" class="space-y-4">
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <div class="w-full">
+                                <label for="op-date" class="block text-gray-400 mb-1" data-lang-key="opDateLabel">Fecha 🕐</label>
+                                <input type="date" id="op-date" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white">
+                            </div>
+                            <div class="w-full">
+                                <label for="op-asset" class="block text-gray-400 mb-1" data-lang-key="opAssetLabel">Activo Operado 📈</label>
+                                <input type="text" id="op-asset" data-lang-key-placeholder="opAssetPlaceholder" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white">
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <div class="w-full">
+                                <label for="op-entry-time" class="block text-gray-400 mb-1" data-lang-key="opEntryTimeLabel">Hora de Entrada ⏰</label>
+                                <input type="time" id="op-entry-time" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white">
+                            </div>
+                            <div class="w-full">
+                                <label for="op-exit-time" class="block text-gray-400 mb-1" data-lang-key="opExitTimeLabel">Hora de Salida ⏰</label>
+                                <input type="time" id="op-exit-time" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white">
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <div class="w-full">
+                                <label for="op-amount" class="block text-gray-400 mb-1" data-lang-key="opAmountLabel">Monto de la Operación 💲</label>
+                                <input type="number" step="0.01" id="op-amount" data-lang-key-placeholder="opAmountPlaceholder" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white">
+                            </div>
+                            <div class="w-full">
+                                <label for="op-risk" class="block text-gray-400 mb-1" data-lang-key="opRiskLabel">Riesgo Asumido (%) 🛡️</label>
+                                <input type="number" step="0.1" id="op-risk" data-lang-key-placeholder="opRiskPlaceholder" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="op-strategy" class="block text-gray-400 mb-1" data-lang-key="opStrategyLabel">Tipo de Entrada (Estrategia) 🧠</label>
+                            <input type="text" id="op-strategy" data-lang-key-placeholder="opStrategyPlaceholder" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white">
+                        </div>
+                        <div>
+                            <label for="op-emotion-before" class="block text-gray-400 mb-1" data-lang-key="opEmotionBeforeLabel">Emoción Antes de Operar 💡</label>
+                            <select id="op-emotion-before" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white"></select>
+                        </div>
+                        <div>
+                            <label for="op-result" class="block text-gray-400 mb-1" data-lang-key="opResultLabel">Resultado (Ganancia/Pérdida) 💰</label>
+                            <input type="number" step="0.01" id="op-result" data-lang-key-placeholder="opResultPlaceholder" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white">
+                        </div>
+                        <div>
+                            <label for="op-emotion-after" class="block text-gray-400 mb-1" data-lang-key="opEmotionAfterLabel">Emoción Después de Operar 📌</label>
+                            <select id="op-emotion-after" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white"></select>
+                        </div>
+                        <div>
+                            <label for="op-notes" class="block text-gray-400 mb-1" data-lang-key="opNotesLabel">Notas y Lección Aprendida 📝</label>
+                            <textarea id="op-notes" rows="3" data-lang-key-placeholder="opNotesPlaceholder" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white"></textarea>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-4 mt-6">
+                            <button type="button" id="clear-journal-button" class="premium-btn w-full sm:w-auto px-8 py-3 rounded-full text-lg font-bold text-white bg-gray-600 hover:bg-gray-500 transition-all duration-300 transform hover:scale-105" data-lang-key="clearFormButton">
+                                Limpiar Formulario
+                            </button>
+                            <button type="submit" id="save-operation-button" class="premium-btn w-full sm:w-auto px-8 py-3 rounded-full text-lg font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition-all duration-300 transform hover:scale-105" data-lang-key="saveTradeButton">
+                                Guardar Operación
+                            </button>
+                        </div>
+                    </form>
+                </section>
+                
+                <!-- Historial de Operaciones -->
+                <section class="bg-gray-800 p-6 sm:p-8 rounded-2xl border border-gray-700 section-glow mt-8">
+                    <h2 class="text-2xl font-bold mb-4 text-emerald-300 flex items-center gap-3"><span class="text-3xl">📝</span> <span data-lang-key="latestTradesTitle">Tus Últimas Operaciones</span></h2>
+                    <p class="text-gray-400 mb-4" data-lang-key="latestTradesDescription">Aquí puedes ver tus registros más recientes.</p>
+                    <ul id="operations-list" class="space-y-4">
+                        <li id="no-operations-message" class="text-center text-gray-500 italic" data-lang-key="noTradesMessage">Aún no hay operaciones guardadas.</li>
+                    </ul>
+                </section>
+            </main>
+        </div>
+
+        <!-- Contenedor para el Checklist Pre-Operación -->
+        <div id="checklist-section" class="hidden">
+            <header class="text-center py-8 mb-10">
+                <p class="text-lg font-semibold text-purple-400 uppercase" data-lang-key="checklistSubHeader">HERRAMIENTA DE DISCIPLINA</p>
+                <h1 class="text-4xl md:text-5xl font-black mt-2 font-['Montserrat']" data-lang-key="checklistHeader">Checklist Pre-Operación</h1>
+            </header>
+            <main class="space-y-6">
+                <section class="bg-gray-800 p-6 sm:p-8 rounded-2xl border border-gray-700 section-glow">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-purple-300" data-lang-key="checklistTitle">¡Prepárate para el mercado!</h2>
+                        <button id="reset-checklist-button" class="px-4 py-2 text-sm rounded-full font-semibold text-white bg-gray-600 hover:bg-gray-500 transition-colors duration-300">
+                            <i class="fas fa-sync-alt mr-2"></i><span data-lang-key="resetButton">Reiniciar</span>
+                        </button>
+                    </div>
+                    <div id="checklist-items" class="space-y-4">
+                    </div>
+                    <!-- Nueva sección de progreso y resultados -->
+                    <div class="mt-8 text-center">
+                        <h3 class="text-lg font-semibold text-gray-400 mb-2" data-lang-key="progressLabel">Progreso</h3>
+                        <div class="w-full bg-gray-700 rounded-full h-4 mb-4">
+                            <div id="checklist-progress-bar" class="bg-purple-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <p class="text-xl font-bold"><span data-lang-key="scoreLabel">Puntaje</span>: <span id="checklist-score">0</span>/7</p>
+                        <div id="checklist-result-box" class="mt-4 p-4 rounded-lg transition-all duration-300 bg-red-900/50 border border-red-700">
+                             <p id="checklist-recommendation" class="text-lg font-semibold text-red-300"></p>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+        
+        <!-- Contenedor para el Perfil de Usuario -->
+        <div id="profile-section" class="hidden">
+            <header class="text-center py-8 mb-10">
+                <p class="text-lg font-semibold text-gray-400 uppercase" data-lang-key="profileSubHeader">CONFIGURACIÓN</p>
+                <h1 class="text-4xl md:text-5xl font-black mt-2 font-['Montserrat']" data-lang-key="profileHeader">Tu Perfil</h1>
+            </header>
+            <main class="space-y-10">
+                <!-- Información del Usuario -->
+                <section class="bg-gray-800 p-6 sm:p-8 rounded-2xl border border-gray-700 section-glow">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-300 flex items-center gap-3"><i class="fas fa-user-circle text-cyan-400"></i><span data-lang-key="personalInfoTitle">Información Personal</span></h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="display-name" class="block text-gray-400 mb-1" data-lang-key="displayNameLabel">Tu Nombre o Apodo:</label>
+                            <input type="text" id="display-name" data-lang-key-placeholder="displayNamePlaceholder" class="w-full p-3 rounded-md bg-gray-700 border border-gray-600 text-white">
+                        </div>
+                        <button id="save-profile-button" class="premium-btn w-full sm:w-auto px-8 py-3 rounded-full text-lg font-bold text-white bg-cyan-600 hover:bg-cyan-500 transition-all duration-300 transform hover:scale-105" data-lang-key="saveNameButton">
+                            Guardar Nombre
+                        </button>
+                        <div class="bg-gray-900 p-4 rounded-xl border border-gray-700 mt-4">
+                            <p class="text-gray-400" data-lang-key="uniqueUserIdLabel">Tu ID de Usuario Único:</p>
+                            <p id="profile-user-id" class="text-cyan-300 font-mono break-all text-sm mt-1">Cargando...</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Tema de la aplicación -->
+                <section class="bg-gray-800 p-6 sm:p-8 rounded-2xl border border-gray-700 section-glow">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-300 flex items-center gap-3"><i class="fas fa-palette text-orange-400"></i><span data-lang-key="themeTitle">Tema</span></h2>
+                    <p class="text-gray-400 mb-4" data-lang-key="themeDescription">Elige tu tema preferido.</p>
+                    <div class="flex gap-4">
+                        <button data-theme="dark" class="theme-btn active w-full p-3 rounded-lg bg-indigo-600 text-white font-bold" data-lang-key="darkThemeButton">Oscuro</button>
+                        <button data-theme="light" class="theme-btn w-full p-3 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-bold transition" data-lang-key="lightThemeButton">Claro</button>
+                    </div>
+                </section>
+        
+                <!-- Configuración de Idioma -->
+                <section class="bg-gray-800 p-6 sm:p-8 rounded-2xl border border-gray-700 section-glow">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-300 flex items-center gap-3"><i class="fas fa-language text-emerald-400"></i><span data-lang-key="languageTitle">Idioma</span></h2>
+                    <p class="text-gray-400 mb-4" data-lang-key="languageDescription">Selecciona tu idioma de preferencia.</p>
+                    <div class="flex gap-4">
+                        <button data-lang="es" class="lang-btn active w-full p-3 rounded-lg bg-emerald-600 text-white font-bold">Español</button>
+                        <button data-lang="en" class="lang-btn w-full p-3 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-bold transition">English</button>
+                    </div>
+                </section>
+        
+                <!-- Recordatorio Diario -->
+                <section class="bg-gray-800 p-6 sm:p-8 rounded-2xl border border-gray-700 section-glow">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-300 flex items-center gap-3"><i class="fas fa-bell text-purple-400"></i><span data-lang-key="reminderTitle">Recordatorio Diario</span></h2>
+                    <p class="text-gray-400 mb-4" data-lang-key="reminderDescription">Establece una hora para recibir un recordatorio y registrar tu día de trading. (Función de alarma local)</p>
+                    <div class="flex flex-col sm:flex-row gap-4 items-center">
+                        <input type="time" id="reminder-time" class="w-full p-3 rounded-md bg-gray-700 border border-gray-600 text-white text-lg">
+                        <button id="save-reminder-button" class="premium-btn w-full sm:w-auto px-8 py-3 rounded-full text-lg font-bold text-white bg-purple-600 hover:bg-purple-500 transition-all duration-300 transform hover:scale-105" data-lang-key="saveButton">
+                            Guardar
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Zona de Peligro -->
+                 <section class="bg-gray-800 p-6 sm:p-8 rounded-2xl border border-red-500/50 section-glow">
+                    <h2 class="text-2xl font-bold mb-4 text-red-400 flex items-center gap-3"><i class="fas fa-exclamation-triangle"></i><span data-lang-key="dangerZoneTitle">Zona de Peligro</span></h2>
+                    <p class="text-gray-400 mb-4" data-lang-key="dangerZoneDescription">Estas acciones son irreversibles. Ten cuidado.</p>
+                    <button id="delete-journal-button" class="w-full p-3 rounded-lg bg-red-800 hover:bg-red-700 text-white font-bold transition" data-lang-key="deleteJournalButton">
+                        Borrar Historial del Diario
+                    </button>
+                </section>
+
+            </main>
+        </div>
+
+        <!-- Contenedor para la Suscripción -->
+        <div id="subscription-section" class="hidden">
+            <header class="text-center py-8 mb-10">
+                <p class="text-lg font-semibold text-amber-400 uppercase" data-lang-key="subscriptionSubHeader">DESBLOQUEA TU POTENCIAL</p>
+                <h1 class="text-4xl md:text-5xl font-black mt-2 font-['Montserrat']" data-lang-key="subscriptionHeader">Planes de Suscripción</h1>
+            </header>
+            <main class="space-y-10">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Plan Pro -->
+                    <div class="plan-card bg-gray-800 p-8 rounded-2xl border-2 border-indigo-500 flex flex-col">
+                        <h3 class="text-3xl font-bold text-indigo-400 text-center" data-lang-key="proPlanTitle">PRO</h3>
+                        <p class="text-center text-gray-400 mt-2" data-lang-key="proPlanDescription">Para el trader enfocado</p>
+                        <p class="text-5xl font-black text-center my-6">$19<span class="text-2xl font-bold">.99</span></p>
+                        <ul class="space-y-3 text-lg flex-grow">
+                            <li class="flex items-center gap-3"><i class="fas fa-check-circle text-green-400"></i><span data-lang-key="proFeature1"><b>20</b> Análisis Diarios con IA</span></li>
+                            <li class="flex items-center gap-3"><i class="fas fa-check-circle text-green-400"></i><span data-lang-key="proFeature2">Acceso al Test de Mentalidad</span></li>
+                            <li class="flex items-center gap-3 text-gray-500"><i class="fas fa-times-circle"></i><span data-lang-key="proFeature3">Diario de Trading</span></li>
+                            <li class="flex items-center gap-3 text-gray-500"><i class="fas fa-times-circle"></i><span data-lang-key="proFeature4">Checklist Pre-Operación</span></li>
+                        </ul>
+                        <button data-tier="pro" class="subscribe-button mt-8 w-full py-3 rounded-full text-lg font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-all duration-300" data-lang-key="subscribeButton">Suscribirse</button>
+                    </div>
+
+                    <!-- Plan Premium -->
+                    <div class="plan-card premium bg-gray-800 p-8 rounded-2xl border-2 border-amber-500 flex flex-col">
+                        <h3 class="text-3xl font-bold text-amber-400 text-center" data-lang-key="premiumPlanTitle">PREMIUM</h3>
+                        <p class="text-center text-gray-400 mt-2" data-lang-key="premiumPlanDescription">Acceso total para el trader profesional</p>
+                        <p class="text-5xl font-black text-center my-6">$39<span class="text-2xl font-bold">.99</span></p>
+                        <ul class="space-y-3 text-lg flex-grow">
+                            <li class="flex items-center gap-3"><i class="fas fa-check-circle text-green-400"></i><span data-lang-key="premiumFeature1"><b>50</b> Análisis Diarios con IA</span></li>
+                            <li class="flex items-center gap-3"><i class="fas fa-check-circle text-green-400"></i><span data-lang-key="premiumFeature2">Acceso al Test de Mentalidad</span></li>
+                            <li class="flex items-center gap-3"><i class="fas fa-check-circle text-green-400"></i><span data-lang-key="premiumFeature3">Diario de Trading</span></li>
+                            <li class="flex items-center gap-3"><i class="fas fa-check-circle text-green-400"></i><span data-lang-key="premiumFeature4">Checklist Pre-Operación</span></li>
+                        </ul>
+                        <button data-tier="premium" class="subscribe-button mt-8 w-full py-3 rounded-full text-lg font-bold text-gray-900 bg-amber-400 hover:bg-amber-300 transition-all duration-300" data-lang-key="subscribeButton">Suscribirse</button>
+                    </div>
                 </div>
-            </div>
-        </main>
+            </main>
+        </div>
+
     </div>
+    
+    <!-- Navegación Inferior -->
+    <nav id="bottom-nav" class="fixed bottom-0 left-0 w-full bg-gray-900/80 backdrop-blur-sm border-t border-gray-700 flex justify-around p-2 z-50">
+        <button data-section="analyzer" class="nav-item active flex flex-col items-center justify-center text-cyan-400 w-1/5">
+            <i class="fas fa-chart-line text-2xl mb-1"></i>
+            <span class="text-xs font-medium" data-lang-key="navAnalyzer">Analizador</span>
+        </button>
+        <button data-section="trading-journal" class="nav-item flex flex-col items-center justify-center text-gray-400 w-1/5">
+            <i class="fas fa-book text-2xl mb-1"></i>
+            <span class="text-xs font-medium" data-lang-key="navJournal">Diario</span>
+        </button>
+        <button data-section="mental-test" class="nav-item flex flex-col items-center justify-center text-gray-400 w-1/5">
+            <i class="fas fa-brain text-2xl mb-1"></i>
+            <span class="text-xs font-medium" data-lang-key="navTest">Test</span>
+        </button>
+        <button data-section="subscription" class="nav-item flex flex-col items-center justify-center text-gray-400 w-1/5">
+            <i class="fas fa-crown text-2xl mb-1"></i>
+            <span class="text-xs font-medium" data-lang-key="navSubscription">Planes</span>
+        </button>
+        <button data-section="profile" class="nav-item flex flex-col items-center justify-center text-gray-400 w-1/5">
+            <i class="fas fa-user-cog text-2xl mb-1"></i>
+            <span class="text-xs font-medium" data-lang-key="navProfile">Perfil</span>
+        </button>
+    </nav>
 
-    <!-- Modal personalizado -->
-    <div id="custom-modal" class="modal">
-        <div class="modal-content">
-            <h3 id="modal-title" class="text-2xl font-bold mb-4"></h3>
-            <p id="modal-message" class="text-gray-700 mb-6"></p>
-            <button onclick="hideModal()" class="modal-close-button">
-                Cerrar
-            </button>
+    <!-- Modal de notificaciones -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div id="modal-content" class="modal-content">
+            <h3 id="modal-title" class="text-2xl font-bold mb-4 text-white"></h3>
+            <p id="modal-message" class="text-base text-gray-300 mb-6"></p>
+            <div id="modal-input-container" class="hidden my-4">
+                 <input type="text" id="modal-input" class="w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white">
+            </div>
+            <div id="modal-buttons" class="flex gap-4 justify-center">
+                <button id="modal-cancel-btn" class="px-6 py-2 rounded-full font-bold text-white bg-gray-600 hover:bg-gray-500 transition-colors duration-300 hidden"></button>
+                <button id="modal-confirm-btn" class="px-6 py-2 rounded-full font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-colors duration-300"></button>
+            </div>
         </div>
     </div>
 
-    <!-- Pie de página con logo de academia y disclaimer -->
-    <footer class="app-footer">
-        <img class="academy-logo" src="https://i.postimg.cc/nVW2PvKM/logo-png-oficial-fondo-trasparente.png" alt="Logo de la Academia">
+    <!-- Pie de página -->
+    <footer class="w-full max-w-4xl text-center mt-auto p-4 border-t border-gray-700">
+        <!-- Logo en el pie de página -->
+        <img src="https://i.postimg.cc/nVW2PvKM/logo-png-oficial-fondo-trasparente.png" alt="Logo de para_traders_" class="mx-auto h-20 w-auto mb-4 opacity-80" loading="lazy">
+        
+        <!-- Redes sociales -->
         <div class="flex justify-center space-x-6 mb-4">
-            <a href="https://t.me/erostrading" target="_blank" rel="noopener noreferrer" aria-label="Telegram de para_traders_">
+            <a href="httpst.me/erostrading" target="_blank" rel="noopener noreferrer" aria-label="Telegram de para_traders_">
                 <i class="fab fa-telegram social-icon"></i>
             </a>
-            <a href="https://www.instagram.com/para_traders__?igsh=MXd0eGdtZ3ZnaWJxag==" target="_blank" rel="noopener noreferrer" aria-label="Instagram de para_traders_">
+            <a href="https.instagram.com/para_traders__?igsh=MXd0eGdtZ3ZnaWJxag==" target="_blank" rel="noopener noreferrer" aria-label="Instagram de para_traders_">
                 <i class="fab fa-instagram social-icon"></i>
             </a>
-            <a href="https://www.facebook.com/paraltraders" target="_blank" rel="noopener noreferrer" aria-label="Facebook de para_traders_">
+            <a href="https.facebook.com/paraltraders" target="_blank" rel="noopener noreferrer" aria-label="Facebook de para_traders_">
                 <i class="fab fa-facebook social-icon"></i>
             </a>
-            <a href="https://www.tiktok.com/@para_traders?_t=ZT-8yicg47qPio&_r=1" target="_blank" rel="noopener noreferrer" aria-label="TikTok de para_traders_">
+            <a href="https.tiktok.com/@para_traders?_t=ZT-8yicg47qPio&_r=1" target="_blank" rel="noopener noreferrer" aria-label="TikTok de para_traders_">
                 <i class="fab fa-tiktok social-icon"></i>
             </a>
         </div>
-        <p class="text-gray-500 mt-2 max-w-2xl mx-auto">
-            Aviso Legal: El "Analizador de Emociones" es una herramienta educativa y de apoyo psicológico para el trading. La información y las recomendaciones proporcionadas **NO constituyen asesoramiento financiero ni de inversión**. Las decisiones de trading son responsabilidad exclusiva del usuario.
+        
+        <p class="text-xs text-gray-500" data-lang-key="footerDevelopedBy">
+            Desarrollado con ❤️ por el equipo de P 'TRADERS
+        </p>
+        <p class="text-xs text-gray-400 mt-2 leading-relaxed">
+            <span class="font-bold text-gray-300" data-lang-key="legalDisclaimerTitle">Aviso Legal:</span> <span data-lang-key="legalDisclaimerText">El analizador de emociones es una herramienta educativa y de apoyo psicológico para el trading. La información y las recomendaciones proporcionadas no constituyen asesoramiento financiero ni de inversión. Las decisiones de trading son responsabilidad exclusiva del usuario.</span>
         </p>
     </footer>
 
-    <script>
-        // ¡IMPORTANTE! Reemplaza "TU_CLAVE_DE_API_DE_GEMINI_AQUI" con tu clave de API real de Gemini.
-        // CUIDADO: Exponer claves de API en el cliente es inseguro para producción.
-        const API_KEY = "AIzaSyDebuUKPwhlHqkBMfTxYF6oM_WSYbs6QEI"; // Asegúrate de reemplazar esto con tu clave real.
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
-        
-        const MAX_DAILY_USES = 8; // Actualizado a 8 usos como en el mensaje de bloqueo
-        const USES_KEY = 'emotionAnalyzerDailyUses';
-        const LAST_USE_DATE_KEY = 'emotionAnalyzerLastUseDate';
-        const ANALYSIS_HISTORY_KEY = 'emotionAnalysisHistory'; // Nueva clave para el historial de análisis
-        const HISTORY_LIMIT = MAX_DAILY_USES; // Limitar el historial a los últimos X análisis
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, doc, setDoc, getDoc, getDocs, writeBatch, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        let dailyUsesLeft = MAX_DAILY_USES;
+        setLogLevel('debug');
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let userId = null;
+        let userProfile = null;
+        let unsubscribeProfile = null;
+        let unsubscribeAnalyses = null;
+        let unsubscribeJournal = null;
+        const MIN_ANALYSES_FOR_SUMMARY = 3;
+
+        let emotionChart = null;
+        let pnlChart = null;
+        let currentLang = 'es';
+
+        const TIER_LIMITS = {
+            free: 2,
+            registered: 4, // 2 free + 2 for registering
+            pro: 20,
+            premium: 50
+        };
+
+        // --- I18N (Internationalization) ---
+        const translations = {
+            es: {
+                // General & Nav
+                analyzerTitle: "Analizador de Emociones",
+                welcomeMessage: "Hola,",
+                navAnalyzer: "Analizador",
+                navJournal: "Diario",
+                navTest: "Test",
+                navProfile: "Perfil",
+                navSubscription: "Planes",
+                loading: "Cargando...",
+                userIdLabel: "ID de Usuario",
+                dailyAnalyses: "Análisis Diarios Usados",
+                
+                // Analyzer Section
+                analyzerPanelTitle: "Analiza tu Experiencia",
+                analyzerPlaceholder: "Ejemplo: 'Compré Bitcoin cuando vi una gran caída, sintiendo pánico y un deseo de salir rápidamente. Finalmente vendí con pérdidas, sintiéndome frustrado y ansioso.'",
+                analyzeButton: "Analizar con IA",
+                resultsTitle: "Resultados del Análisis",
+                riskLevelLabel: "Nivel de Riesgo Emocional",
+                riskLevelPrefix: "Nivel:",
+                riskLevels: {
+                    HIGH: "ALTO",
+                    MEDIUM: "MEDIO",
+                    LOW: "BAJO"
+                },
+                analyzing: "Analizando...",
+                recommendationsLabel: "Recomendaciones Personalizadas",
+                preTradeChecklistButton: "Checklist Pre-Operación",
+                generalSummaryTitle: "Resumen Emocional General",
+                summaryNeedsMoreData: "Necesitas más de tres análisis para un resumen general de tus emociones.",
+                summaryDominantEmotion: "Tu emoción dominante ha sido",
+                summaryAverageCalm: "Tu nivel de calma promedio es del",
+
+                // Mindset Test Section
+                mindsetTestSubHeader: "HERRAMIENTA PSICOLÓGICA",
+                mindsetTestHeader: "Test de Mentalidad",
+                mindsetTestTitle: "Test de Mentalidad",
+                mindsetTestDescription: "Evalúa cada afirmación en una escala de 1 (totalmente en desacuerdo) a 5 (totalmente de acuerdo).",
+                submitTestButton: "Enviar Test",
+                mindsetProfileTitle: "Tu Perfil de Mentalidad",
+                totalScoreLabel: "Puntaje Total",
+                mentalTestQuestions: [
+                    "Me frustro rápido cuando el trade no sale bien",
+                    "He operado sin plan solo por impulso",
+                    "Me cuesta aceptar una pérdida",
+                    "Me afecta ver operaciones rojas",
+                    "Me saboteo cuando las cosas no salen como quiero"
+                ],
+                mindsetInterpretation: {
+                    solid: "Mentalidad Sólida",
+                    reactive: "Mentalidad Reactiva",
+                    highRisk: "Mentalidad de Alto Riesgo"
+                },
+                mindsetDetails: {
+                    solid: `<h4 class="font-bold text-lg mb-2 text-green-400">¡Excelente!</h4><ul class="list-disc list-inside space-y-2 text-gray-300"><li>Tienes un fuerte control sobre tus impulsos y emociones.</li><li>Sueles tomar decisiones basadas en tu plan de trading, no en el miedo o la codicia.</li><li><strong>Sugerencia:</strong> Mantén esta disciplina. Refuerza tus hábitos con una revisión semanal de tus operaciones para identificar cualquier pequeño desliz.</li></ul>`,
+                    reactive: `<h4 class="font-bold text-lg mb-2 text-yellow-400">Área de Mejora</h4><ul class="list-disc list-inside space-y-2 text-gray-300"><li>Eres vulnerable a tomar decisiones impulsivas, especialmente bajo presión.</li><li>El FOMO (miedo a quedarse fuera) o el pánico pueden influir en tus operaciones.</li><li><strong>Sugerencia:</strong> Antes de cada operación, respira profundamente 3 veces. Usa siempre el checklist pre-operación para anclarte a tu plan.</li></ul>`,
+                    highRisk: `<h4 class="font-bold text-lg mb-2 text-red-400">¡Atención!</h4><ul class="list-disc list-inside space-y-2 text-gray-300"><li>Tus emociones tienen un control significativo sobre tus decisiones de trading.</li><li>Es muy probable que operes por venganza (revenge trading) o te saltes tus propias reglas.</li><li><strong>Sugerencia:</strong> Considera reducir el tamaño de tu posición para disminuir el estrés emocional. Después de una pérdida, aléjate de la pantalla por al menos 30 minutos.</li></ul>`
+                },
+
+                // Trading Journal Section
+                journalSubHeader: "HERRAMIENTA DE SEGUIMIENTO",
+                journalHeader: "Diario de Trading",
+                dashboardTitle: "Tu Dashboard de Trading",
+                emotionsChartTitle: "Emociones",
+                performanceChartTitle: "Rendimiento",
+                aiAnalysisTitle: "Análisis con IA",
+                notEnoughData: "No hay suficientes datos para el análisis.",
+                logTradeTitle: "Registra una Operación",
+                opDateLabel: "Fecha 🕐",
+                opAssetLabel: "Activo Operado 📈",
+                opAssetPlaceholder: "Ej: BTC/USD",
+                opEntryTimeLabel: "Hora de Entrada ⏰",
+                opExitTimeLabel: "Hora de Salida ⏰",
+                opAmountLabel: "Monto de la Operación 💲",
+                opAmountPlaceholder: "Ej: 1000",
+                opRiskLabel: "Riesgo Asumido (%) 🛡️",
+                opRiskPlaceholder: "Ej: 1.5",
+                opStrategyLabel: "Tipo de Entrada (Estrategia) 🧠",
+                opStrategyPlaceholder: "Ej: Ruptura de rango",
+                opEmotionBeforeLabel: "Emoción Antes de Operar 💡",
+                opResultLabel: "Resultado (Ganancia/Pérdida) 💰",
+                opResultPlaceholder: "Ej: 150.50 (ganancia) / -75.25 (pérdida)",
+                opEmotionAfterLabel: "Emoción Después de Operar 📌",
+                opNotesLabel: "Notas y Lección Aprendida 📝",
+                opNotesPlaceholder: "Ej: Esperar confirmación del setup en la segunda vela.",
+                clearFormButton: "Limpiar Formulario",
+                saveTradeButton: "Guardar Operación",
+                latestTradesTitle: "Tus Últimas Operaciones",
+                latestTradesDescription: "Aquí puedes ver tus registros más recientes.",
+                noTradesMessage: "Aún no hay operaciones guardadas.",
+                aiInsightsMinimum: "Registra al menos 5 operaciones para obtener un análisis de la IA.",
+                aiInsightEmotionBefore: "Emoción recurrente (antes):",
+                aiInsightEmotionAfter: "Emoción recurrente (después):",
+                aiInsightStrategy: "Estrategia más rentable:",
+                aiInsightStrategyPart2: "ha generado",
+                aiInsightStrategyPart3: "operaciones ganadoras.",
+                aiInsightLoss: "Mayor pérdida:",
+                aiInsightLossPart2: "Tu mayor pérdida fue de",
+                aiInsightLossPart3: "en",
+                emotionOptions: { select: "Seleccionar...", calm: "Calma 😌", euphoria: "Euforia 🤩", fear: "Miedo 😨", frustration: "Frustración 😟", greed: "Codicia 🤑" },
+                journalCard: { asset: "Activo", strategy: "Estrategia", result: "Resultado", emotionBeforeAfter: "Emoción (antes/después)", notes: "Notas" },
+
+                // Checklist Section
+                checklistSubHeader: "HERRAMIENTA DE DISCIPLINA",
+                checklistHeader: "Checklist Pre-Operación",
+                checklistTitle: "¡Prepárate para el mercado!",
+                resetButton: "Reiniciar",
+                progressLabel: "Progreso",
+                scoreLabel: "Puntaje",
+                checklistItems: [ "<span>😴</span> Dormí bien al menos 6 horas", "<span>🧘‍♂️</span> Estado emocional estable", "<span>📊</span> Revisé mi plan de trading", "<span>📉</span> Analicé el mercado (tendencia y niveles)", "<span>🧮</span> Calculé riesgo/beneficio", "<span>🛑</span> Stop-loss definido", "<span>✅</span> Solo opero si tengo entrada clara" ],
+                checklistRecommendationNotReady: "🛑 Aún no estás listo. Completa todos los puntos para asegurar una operación disciplinada.",
+                checklistRecommendationReady: "✅ ¡Excelente! Has completado tu checklist y estás mentalmente preparado para operar. ¡Mucho éxito!",
+
+                // Profile Section
+                profileSubHeader: "CONFIGURACIÓN",
+                profileHeader: "Tu Perfil",
+                personalInfoTitle: "Información Personal",
+                displayNameLabel: "Tu Nombre o Apodo:",
+                displayNamePlaceholder: "Ej: Trader Pro",
+                saveNameButton: "Guardar Nombre",
+                uniqueUserIdLabel: "Tu ID de Usuario Único:",
+                themeTitle: "Tema",
+                themeDescription: "Elige tu tema preferido.",
+                darkThemeButton: "Oscuro",
+                lightThemeButton: "Claro",
+                languageTitle: "Idioma",
+                languageDescription: "Selecciona tu idioma de preferencia.",
+                reminderTitle: "Recordatorio Diario",
+                reminderDescription: "Establece una hora para recibir un recordatorio y registrar tu día de trading. (Función de alarma local)",
+                saveButton: "Guardar",
+                dangerZoneTitle: "Zona de Peligro",
+                dangerZoneDescription: "Estas acciones son irreversibles. Ten cuidado.",
+                deleteJournalButton: "Borrar Historial del Diario",
+                
+                // Subscription Section
+                subscriptionSubHeader: "DESBLOQUEA TU POTENCIAL",
+                subscriptionHeader: "Planes de Suscripción",
+                proPlanTitle: "PRO",
+                proPlanDescription: "Para el trader enfocado",
+                proFeature1: "<b>20</b> Análisis Diarios con IA",
+                proFeature2: "Acceso al Test de Mentalidad",
+                proFeature3: "Diario de Trading",
+                proFeature4: "Checklist Pre-Operación",
+                premiumPlanTitle: "PREMIUM",
+                premiumPlanDescription: "Acceso total para el trader profesional",
+                premiumFeature1: "<b>50</b> Análisis Diarios con IA",
+                premiumFeature2: "Acceso al Test de Mentalidad",
+                premiumFeature3: "Diario de Trading",
+                premiumFeature4: "Checklist Pre-Operación",
+                subscribeButton: "Suscribirse",
+
+
+                // Modals & Messages
+                modalClose: "Cerrar",
+                modalCancel: "Cancelar",
+                modalConfirm: "Confirmar",
+                registerButton: "Regístrate Gratis",
+                goToPlansButton: "Ver Planes",
+                registerTitle: "Regístrate para Continuar",
+                registerMessage: "Crea una cuenta gratuita para guardar tu progreso y obtener 2 análisis adicionales hoy.",
+                limitReachedTitle: "Límite Diario Alcanzado",
+                limitReachedMessage: "Has alcanzado tu límite de análisis gratuitos. Regístrate para obtener más o suscríbete para acceso ilimitado.",
+                upgradeTitle: "Función Premium",
+                upgradeMessage: "Esta es una función premium. Suscríbete a uno de nuestros planes para desbloquearla.",
+                subscriptionSuccessTitle: "¡Felicidades!",
+                subscriptionSuccessMessage: "Tu suscripción ha sido activada. ¡Disfruta de tus nuevas funciones!",
+                registrationSuccessTitle: "¡Registro Exitoso!",
+                registrationSuccessMessage: "Tu cuenta ha sido creada. ¡Has recibido 2 análisis adicionales para hoy!",
+
+                emptyFieldTitle: "Campo Vacío",
+                emptyFieldMessage: "Por favor, describe tu experiencia de trading para analizarla.",
+                analysisErrorTitle: "Error de Análisis",
+                analysisErrorMessage: "Ocurrió un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.",
+                requiredFieldsTitle: "Campos Requeridos",
+                requiredFieldsMessage: "Por favor, completa al menos la fecha y el activo.",
+                tradeSavedTitle: "Operación Guardada",
+                tradeSavedMessage: "Tu operación ha sido guardada exitosamente.",
+                tradeSaveErrorTitle: "Error",
+                tradeSaveErrorMessage: "No se pudo guardar la operación. Intenta de nuevo.",
+                nameSavedTitle: "Éxito",
+                nameSavedMessage: "Tu nombre se ha guardado.",
+                nameSaveErrorTitle: "Error",
+                nameSaveErrorMessage: "No se pudo guardar tu nombre.",
+                reminderSavedTitle: "Recordatorio Guardado",
+                reminderSavedMessage: "Se ha establecido un recordatorio local para las",
+                reminderSavedMessage2: "Tu navegador podría pedirte permiso para mostrar notificaciones.",
+                reminderErrorTitle: "Error",
+                reminderErrorMessage: "Por favor, selecciona una hora para el recordatorio.",
+                deleteJournalConfirmTitle: "¿Estás seguro?",
+                deleteJournalConfirmMessage: "Esta acción borrará TODO tu historial de operaciones del diario y no se puede deshacer. Escribe \"BORRAR\" para confirmar.",
+                deleteJournalInputPlaceholder: "Escribe BORRAR aquí",
+                deleteJournalConfirmButton: "Confirmar Borrado",
+                deleteJournalSuccessTitle: "Éxito",
+                deleteJournalSuccessMessage: "Tu historial del diario ha sido borrado.",
+                deleteJournalErrorTitle: "Error",
+                deleteJournalErrorMessage: "No se pudo borrar tu historial.",
+                deleteJournalCancelMessage: "No has escrito \"BORRAR\". La operación ha sido cancelada.",
+
+                // Footer
+                footerDevelopedBy: "Desarrollado con ❤️ por el equipo de P 'TRADERS",
+                legalDisclaimerTitle: "Aviso Legal:",
+                legalDisclaimerText: "El analizador de emociones es una herramienta educativa y de apoyo psicológico para el trading. La información y las recomendaciones proporcionadas no constituyen asesoramiento financiero ni de inversión. Las decisiones de trading son responsabilidad exclusiva del usuario."
+            },
+            en: {
+                // General & Nav
+                analyzerTitle: "Emotion Analyzer",
+                welcomeMessage: "Hello,",
+                navAnalyzer: "Analyzer",
+                navJournal: "Journal",
+                navTest: "Test",
+                navProfile: "Profile",
+                navSubscription: "Plans",
+                loading: "Loading...",
+                userIdLabel: "User ID",
+                dailyAnalyses: "Daily Analyses Used",
+
+                // Analyzer Section
+                analyzerPanelTitle: "Analyze Your Experience",
+                analyzerPlaceholder: "Example: 'I bought Bitcoin when I saw a big dip, feeling panic and a desire to exit quickly. I ended up selling at a loss, feeling frustrated and anxious.'",
+                analyzeButton: "Analyze with AI",
+                resultsTitle: "Analysis Results",
+                riskLevelLabel: "Emotional Risk Level",
+                riskLevelPrefix: "Level:",
+                riskLevels: { HIGH: "HIGH", MEDIUM: "MEDIUM", LOW: "LOW" },
+                analyzing: "Analyzing...",
+                recommendationsLabel: "Personalized Recommendations",
+                preTradeChecklistButton: "Pre-Trade Checklist",
+                generalSummaryTitle: "General Emotional Summary",
+                summaryNeedsMoreData: "You need more than three analyses for a general summary of your emotions.",
+                summaryDominantEmotion: "Your dominant emotion has been",
+                summaryAverageCalm: "Your average calmness level is",
+
+                // Mindset Test Section
+                mindsetTestSubHeader: "PSYCHOLOGICAL TOOL",
+                mindsetTestHeader: "Mindset Test",
+                mindsetTestTitle: "Mindset Test",
+                mindsetTestDescription: "Rate each statement on a scale of 1 (strongly disagree) to 5 (strongly agree).",
+                submitTestButton: "Submit Test",
+                mindsetProfileTitle: "Your Mindset Profile",
+                totalScoreLabel: "Total Score",
+                mentalTestQuestions: [ "I get frustrated quickly when a trade goes wrong", "I have traded without a plan, just on impulse", "I find it hard to accept a loss", "Seeing red trades affects me", "I sabotage myself when things don't go as planned" ],
+                mindsetInterpretation: { solid: "Solid Mindset", reactive: "Reactive Mindset", highRisk: "High-Risk Mindset" },
+                mindsetDetails: {
+                    solid: `<h4 class="font-bold text-lg mb-2 text-green-400">Excellent!</h4><ul class="list-disc list-inside space-y-2 text-gray-300"><li>You have strong control over your impulses and emotions.</li><li>You tend to make decisions based on your trading plan, not fear or greed.</li><li><strong>Suggestion:</strong> Maintain this discipline. Reinforce your habits with a weekly review of your trades to identify any minor slips.</li></ul>`,
+                    reactive: `<h4 class="font-bold text-lg mb-2 text-yellow-400">Area for Improvement</h4><ul class="list-disc list-inside space-y-2 text-gray-300"><li>You are vulnerable to making impulsive decisions, especially under pressure.</li><li>FOMO (fear of missing out) or panic can influence your trades.</li><li><strong>Suggestion:</strong> Before each trade, take 3 deep breaths. Always use the pre-trade checklist to anchor yourself to your plan.</li></ul>`,
+                    highRisk: `<h4 class="font-bold text-lg mb-2 text-red-400">Warning!</h4><ul class="list-disc list-inside space-y-2 text-gray-300"><li>Your emotions have significant control over your trading decisions.</li><li>You are very likely to engage in revenge trading or skip your own rules.</li><li><strong>Suggestion:</strong> Consider reducing your position size to lower emotional stress. After a loss, step away from the screen for at least 30 minutes.</li></ul>`
+                },
+
+                // Trading Journal Section
+                journalSubHeader: "TRACKING TOOL",
+                journalHeader: "Trading Journal",
+                dashboardTitle: "Your Trading Dashboard",
+                emotionsChartTitle: "Emotions",
+                performanceChartTitle: "Performance",
+                aiAnalysisTitle: "AI Analysis",
+                notEnoughData: "Not enough data for analysis.",
+                logTradeTitle: "Log a Trade",
+                opDateLabel: "Date 🕐",
+                opAssetLabel: "Asset Traded 📈",
+                opAssetPlaceholder: "Ex: BTC/USD",
+                opEntryTimeLabel: "Entry Time ⏰",
+                opExitTimeLabel: "Exit Time ⏰",
+                opAmountLabel: "Trade Amount 💲",
+                opAmountPlaceholder: "Ex: 1000",
+                opRiskLabel: "Risk Taken (%) 🛡️",
+                opRiskPlaceholder: "Ex: 1.5",
+                opStrategyLabel: "Entry Type (Strategy) 🧠",
+                opStrategyPlaceholder: "Ex: Range breakout",
+                opEmotionBeforeLabel: "Emotion Before Trading 💡",
+                opResultLabel: "Result (Profit/Loss) 💰",
+                opResultPlaceholder: "Ex: 150.50 (profit) / -75.25 (loss)",
+                opEmotionAfterLabel: "Emotion After Trading 📌",
+                opNotesLabel: "Notes & Lesson Learned 📝",
+                opNotesPlaceholder: "Ex: Wait for confirmation on the second candle.",
+                clearFormButton: "Clear Form",
+                saveTradeButton: "Save Trade",
+                latestTradesTitle: "Your Latest Trades",
+                latestTradesDescription: "Here you can see your most recent entries.",
+                noTradesMessage: "No trades saved yet.",
+                aiInsightsMinimum: "Log at least 5 trades to get AI analysis.",
+                aiInsightEmotionBefore: "Recurring emotion (before):",
+                aiInsightEmotionAfter: "Recurring emotion (after):",
+                aiInsightStrategy: "Most profitable strategy:",
+                aiInsightStrategyPart2: "has generated",
+                aiInsightStrategyPart3: "winning trades.",
+                aiInsightLoss: "Biggest loss:",
+                aiInsightLossPart2: "Your biggest loss was",
+                aiInsightLossPart3: "on",
+                emotionOptions: { select: "Select...", calm: "Calm 😌", euphoria: "Euphoria 🤩", fear: "Fear 😨", frustration: "Frustration 😟", greed: "Greed 🤑" },
+                journalCard: { asset: "Asset", strategy: "Strategy", result: "Result", emotionBeforeAfter: "Emotion (before/after)", notes: "Notes" },
+
+                // Checklist Section
+                checklistSubHeader: "DISCIPLINE TOOL",
+                checklistHeader: "Pre-Trade Checklist",
+                checklistTitle: "Get ready for the market!",
+                resetButton: "Reset",
+                progressLabel: "Progress",
+                scoreLabel: "Score",
+                checklistItems: [ "<span>😴</span> Slept well, at least 6 hours", "<span>🧘‍♂️</span> Emotionally stable state", "<span>📊</span> Reviewed my trading plan", "<span>📉</span> Analyzed the market (trend and levels)", "<span>🧮</span> Calculated risk/reward", "<span>🛑</span> Stop-loss is defined", "<span>✅</span> Only trading if I have a clear entry" ],
+                checklistRecommendationNotReady: "🛑 You are not ready yet. Complete all points to ensure a disciplined trade.",
+                checklistRecommendationReady: "✅ Excellent! You've completed your checklist and are mentally prepared to trade. Good luck!",
+
+                // Profile Section
+                profileSubHeader: "SETTINGS",
+                profileHeader: "Your Profile",
+                personalInfoTitle: "Personal Information",
+                displayNameLabel: "Your Name or Nickname:",
+                displayNamePlaceholder: "Ex: Trader Pro",
+                saveNameButton: "Save Name",
+                uniqueUserIdLabel: "Your Unique User ID:",
+                themeTitle: "Theme",
+                themeDescription: "Choose your preferred theme.",
+                darkThemeButton: "Dark",
+                lightThemeButton: "Light",
+                languageTitle: "Language",
+                languageDescription: "Select your preferred language.",
+                reminderTitle: "Daily Reminder",
+                reminderDescription: "Set a time to receive a reminder to log your trading day. (Local alarm function)",
+                saveButton: "Save",
+                dangerZoneTitle: "Danger Zone",
+                dangerZoneDescription: "These actions are irreversible. Be careful.",
+                deleteJournalButton: "Delete Journal History",
+                
+                // Subscription Section
+                subscriptionSubHeader: "UNLOCK YOUR POTENTIAL",
+                subscriptionHeader: "Subscription Plans",
+                proPlanTitle: "PRO",
+                proPlanDescription: "For the focused trader",
+                proFeature1: "<b>20</b> Daily AI Analyses",
+                proFeature2: "Access to Mindset Test",
+                proFeature3: "Trading Journal",
+                proFeature4: "Pre-Trade Checklist",
+                premiumPlanTitle: "PREMIUM",
+                premiumPlanDescription: "Full access for the professional trader",
+                premiumFeature1: "<b>50</b> Daily AI Analyses",
+                premiumFeature2: "Access to Mindset Test",
+                premiumFeature3: "Trading Journal",
+                premiumFeature4: "Pre-Trade Checklist",
+                subscribeButton: "Subscribe",
+
+                // Modals & Messages
+                modalClose: "Close",
+                modalCancel: "Cancel",
+                modalConfirm: "Confirm",
+                registerButton: "Register for Free",
+                goToPlansButton: "View Plans",
+                registerTitle: "Register to Continue",
+                registerMessage: "Create a free account to save your progress and get 2 extra analyses today.",
+                limitReachedTitle: "Daily Limit Reached",
+                limitReachedMessage: "You have reached your free analysis limit. Register to get more or subscribe for unlimited access.",
+                upgradeTitle: "Premium Feature",
+                upgradeMessage: "This is a premium feature. Subscribe to one of our plans to unlock it.",
+                subscriptionSuccessTitle: "Congratulations!",
+                subscriptionSuccessMessage: "Your subscription has been activated. Enjoy your new features!",
+                registrationSuccessTitle: "Registration Successful!",
+                registrationSuccessMessage: "Your account has been created. You have received 2 additional analyses for today!",
+                
+                emptyFieldTitle: "Empty Field",
+                emptyFieldMessage: "Please describe your trading experience to analyze it.",
+                analysisErrorTitle: "Analysis Error",
+                analysisErrorMessage: "An error occurred while processing your request. Please try again later.",
+                requiredFieldsTitle: "Required Fields",
+                requiredFieldsMessage: "Please fill in at least the date and asset.",
+                tradeSavedTitle: "Trade Saved",
+                tradeSavedMessage: "Your trade has been saved successfully.",
+                tradeSaveErrorTitle: "Error",
+                tradeSaveErrorMessage: "Could not save the trade. Please try again.",
+                nameSavedTitle: "Success",
+                nameSavedMessage: "Your name has been saved.",
+                nameSaveErrorTitle: "Error",
+                nameSaveErrorMessage: "Could not save your name.",
+                reminderSavedTitle: "Reminder Saved",
+                reminderSavedMessage: "A local reminder has been set for",
+                reminderSavedMessage2: "Your browser might ask for permission to show notifications.",
+                reminderErrorTitle: "Error",
+                reminderErrorMessage: "Please select a time for the reminder.",
+                deleteJournalConfirmTitle: "Are you sure?",
+                deleteJournalConfirmMessage: "This action will delete ALL your journal history and cannot be undone. Type \"DELETE\" to confirm.",
+                deleteJournalInputPlaceholder: "Type DELETE here",
+                deleteJournalConfirmButton: "Confirm Deletion",
+                deleteJournalSuccessTitle: "Success",
+                deleteJournalSuccessMessage: "Your journal history has been deleted.",
+                deleteJournalErrorTitle: "Error",
+                deleteJournalErrorMessage: "Could not delete your history.",
+                deleteJournalCancelMessage: "You did not type \"DELETE\". The operation has been canceled.",
+
+                // Footer
+                footerDevelopedBy: "Developed with ❤️ by the P 'TRADERS team",
+                legalDisclaimerTitle: "Legal Disclaimer:",
+                legalDisclaimerText: "The emotion analyzer is an educational and psychological support tool for trading. The information and recommendations provided do not constitute financial or investment advice. Trading decisions are the sole responsibility of the user."
+            }
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
-            const today = new Date().toDateString(); // Obtiene la fecha actual sin la hora
-
-            const storedUses = localStorage.getItem(USES_KEY);
-            const storedDate = localStorage.getItem(LAST_USE_DATE_KEY);
-
-            if (storedDate === today) {
-                // Si la fecha almacenada es la de hoy, carga los usos restantes
-                if (storedUses !== null) {
-                    dailyUsesLeft = parseInt(storedUses, 10);
-                } else {
-                    // Si no hay usos almacenados para hoy, se asume el máximo (primer uso del día)
-                    dailyUsesLeft = MAX_DAILY_USES;
-                }
-            } else {
-                // Si es un nuevo día, reinicia los usos y actualiza la fecha
-                dailyUsesLeft = MAX_DAILY_USES;
-                localStorage.setItem(LAST_USE_DATE_KEY, today);
-                localStorage.setItem(USES_KEY, dailyUsesLeft);
-                localStorage.removeItem(ANALYSIS_HISTORY_KEY); // Limpiar historial para el nuevo día
-            }
-            updateTrialDisplay();
-            updateOverallEmotionalSummary(); // Llamar al cargar para mostrar el resumen inicial
-        });
-
-        /**
-         * Actualiza el contador de usos diarios en la interfaz y habilita/deshabilita el botón.
-         */
-        function updateTrialDisplay() {
-            const analyzeButton = document.getElementById('analyze-button');
-            const analyzerLocked = document.getElementById('analyzer-locked');
-            const trialCountSpan = document.getElementById('trial-count'); 
-
-            if (dailyUsesLeft <= 0) {
-                analyzeButton.disabled = true;
-                analyzeButton.classList.add('hidden'); // Oculta el botón
-                analyzerLocked.classList.remove('hidden'); // Muestra el mensaje de bloqueo
-                analyzerLocked.querySelector('p').textContent = `Has usado tus ${MAX_DAILY_USES} análisis de hoy. Vuelve mañana para más o contacta soporte para la versión ilimitada.`;
-            } else {
-                analyzeButton.disabled = false;
-                analyzeButton.classList.remove('hidden'); // Muestra el botón
-                analyzerLocked.classList.add('hidden'); // Oculta el mensaje de bloqueo
-                
-                if (trialCountSpan) {
-                    trialCountSpan.textContent = dailyUsesLeft;
-                    analyzeButton.innerHTML = `Analizar mi Emoción (<span id="trial-count">${dailyUsesLeft}</span> Uso${dailyUsesLeft !== 1 ? 's' : ''} Restantes Hoy)`;
-                }
-            }
-        }
-
-        /**
-         * Muestra el modal personalizado con un título y mensaje.
-         * @param {string} title - El título del modal.
-         * @param {string} message - El mensaje del modal.
-         */
-        function showModal(title, message) {
-            document.getElementById('modal-title').textContent = title;
-            document.getElementById('modal-message').textContent = message;
-            document.getElementById('custom-modal').style.display = 'flex';
-        }
-
-        /**
-         * Oculta el modal personalizado.
-         */
-        function hideModal() {
-            document.getElementById('custom-modal').style.display = 'none';
-        }
-
-        /**
-         * Genera y muestra un resumen emocional general basado en los análisis pasados.
-         */
-        function updateOverallEmotionalSummary() {
-            const overallSummaryDiv = document.getElementById('overall-emotional-summary');
-            const overallSummaryText = document.getElementById('overall-summary-text');
-            const history = JSON.parse(localStorage.getItem(ANALYSIS_HISTORY_KEY) || '[]');
-
-            if (history.length < 3) { // Se necesitan al menos 3 análisis para un resumen significativo
-                overallSummaryDiv.classList.remove('hidden'); // Mostrar sección pero con mensaje informativo
-                overallSummaryText.className = "text-gray-300 leading-relaxed";
-                overallSummaryText.textContent = `Se necesitan al menos 3 análisis (llevas ${history.length}) para generar un resumen emocional general.`;
-                return;
-            }
-
-            overallSummaryDiv.classList.remove('hidden'); // Asegurarse de que la sección sea visible
-
-            let emotionCounts = {
-                "Miedo": 0, "Ansiedad": 0, "Codicia": 0, "Euforia": 0, "Calma": 0, "Mixto": 0
+             // All element selectors grouped together
+            const sections = {
+                analyzer: document.getElementById('analyzer-section'),
+                'mental-test': document.getElementById('mental-test-section'),
+                'trading-journal': document.getElementById('trading-journal-section'),
+                checklist: document.getElementById('checklist-section'),
+                profile: document.getElementById('profile-section'),
+                subscription: document.getElementById('subscription-section')
             };
-            let totalCalmLevel = 0;
-
-            history.forEach(analysis => {
-                if (emotionCounts[analysis.dominantEmotion] !== undefined) {
-                    emotionCounts[analysis.dominantEmotion]++;
-                } else {
-                    emotionCounts["Mixto"]++; // Fallback para emociones inesperadas
-                }
-                totalCalmLevel += analysis.calmLevel;
-            });
-
-            const avgCalmLevel = totalCalmLevel / history.length;
-
-            let mostFrequentEmotion = "Mixto";
-            let maxCount = 0;
-            for (const emotion in emotionCounts) {
-                if (emotionCounts[emotion] > maxCount) {
-                    maxCount = emotionCounts[emotion];
-                    mostFrequentEmotion = emotion;
-                }
-            }
-
-            let summary = "";
-            let summaryClass = "text-gray-300"; // Default neutral color
-
-            if (mostFrequentEmotion === "Calma" && avgCalmLevel >= 80) {
-                summary = "¡Excelente consistencia emocional! Tu tendencia es a operar con **calma y objetividad**. Sigue fortaleciendo esta fortaleza.";
-                summaryClass = "text-green-400";
-            } else if (mostFrequentEmotion === "Euforia" && avgCalmLevel >= 60) {
-                summary = "Se observa una tendencia a la euforia. Si bien es positivo, ten cuidado con el **exceso de confianza** para evitar riesgos innecesarios. Mantente disciplinado.";
-                summaryClass = "text-yellow-400";
-            } else if (mostFrequentEmotion === "Codicia" && avgCalmLevel <= 50) {
-                summary = "Hay signos de **codicia**. Ten precaución con la sobreexposición o el aumento de lotaje sin justificación. Revisa tu plan de trading y los objetivos realistas.";
-                summaryClass = "text-orange-400";
-            }
-            else if ((mostFrequentEmotion === "Miedo" || mostFrequentEmotion === "Ansiedad") && avgCalmLevel <= 40) {
-                summary = "Se observa una tendencia hacia el **miedo o la ansiedad**. Es crucial trabajar en la gestión del riesgo y la mentalidad para evitar parálisis o decisiones impulsivas. Considera una pausa y técnicas de relajación.";
-                summaryClass = "text-red-400";
-            } else {
-                summary = "Tu estado emocional es **mixto o inconsistente**. Es importante identificar patrones y detonantes para lograr una mayor estabilidad emocional en tus operaciones. Continúa registrando tus experiencias.";
-                summaryClass = "text-purple-400"; // Color para mixto
-            }
-            
-            overallSummaryText.textContent = summary;
-            overallSummaryText.className = `leading-relaxed font-semibold ${summaryClass}`; // Aplicar color dinámico y negrita
-        }
-
-        /**
-         * Realiza el análisis emocional del texto usando la IA de Gemini.
-         * Actualiza la interfaz con el resultado, el nivel de riesgo y las recomendaciones.
-         */
-        async function performAIAnalysis() {
-            // Check if API_KEY is still the placeholder. If so, guide the user.
-            if (API_KEY === "TU_CLAVE_DE_API_DE_GEMINI_AQUI") {
-                showModal('Error de Configuración', 'Por favor, reemplaza "TU_CLAVE_DE_API_DE_GEMINI_AQUI" con tu clave de API real de Gemini en el código para que la aplicación funcione.');
-                return;
-            }
-
-            if (dailyUsesLeft <= 0) {
-                showModal('Análisis Bloqueado', `Has utilizado tus ${MAX_DAILY_USES} usos de hoy. Vuelve mañana para más.`);
-                return;
-            }
-
-            const traderText = document.getElementById('trader-text').value.trim();
-            if (!traderText) {
-                showModal('Entrada Vacía', 'Por favor, describe tu experiencia en el cuadro de texto para analizar tus emociones.');
-                return;
-            }
-
+            const checklistButton = document.getElementById('checklist-button');
+            const tradingExperienceEl = document.getElementById('trading-experience');
+            const analyzeButton = document.getElementById('analyze-button');
+            const buttonText = document.getElementById('button-text');
             const loader = document.getElementById('loader');
-            const analysisResultDiv = document.getElementById('analysis-result');
-            const aiFullAnalysisP = document.getElementById('ai-full-analysis');
-            const analyzeButton = document.getElementById('analyze-button');
+            const resultsSection = document.getElementById('results-section');
+            const emotionEmojisEl = document.getElementById('emotion-emojis');
+            const dominantEmotionDisplayEl = document.getElementById('dominant-emotion-display');
+            const riskLevelDisplayEl = document.getElementById('risk-level-display');
+            const recommendationDisplayEl = document.getElementById('recommendation-display');
+            const generalSummarySection = document.getElementById('general-summary-section');
+            const generalSummaryContent = document.getElementById('general-summary-content');
+            const userIdEl = document.getElementById('user-id');
+            const userInfoEl = document.getElementById('user-info');
+            const modalOverlay = document.getElementById('modal-overlay');
+            const modalTitle = document.getElementById('modal-title');
+            const modalMessage = document.getElementById('modal-message');
+            const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+            const modalCancelBtn = document.getElementById('modal-cancel-btn');
+            const modalInputContainer = document.getElementById('modal-input-container');
+            const modalInput = document.getElementById('modal-input');
+            const profileUserIdEl = document.getElementById('profile-user-id');
+            const displayNameInput = document.getElementById('display-name');
+            const saveProfileButton = document.getElementById('save-profile-button');
+            const themeButtons = document.querySelectorAll('.theme-btn');
+            const langButtons = document.querySelectorAll('.lang-btn');
+            const deleteJournalButton = document.getElementById('delete-journal-button');
+            const saveReminderButton = document.getElementById('save-reminder-button');
+            const reminderTimeEl = document.getElementById('reminder-time');
+            const tradingJournalForm = document.getElementById('trading-journal-form');
+            const clearJournalButton = document.getElementById('clear-journal-button');
+            const saveOperationButton = document.getElementById('save-operation-button');
+            const operationsList = document.getElementById('operations-list');
+            const noOperationsMessage = document.getElementById('no-operations-message');
+            const aiSummaryEl = document.getElementById('ai-summary');
+            const checklistScore = document.getElementById('checklist-score');
+            const checklistRecommendation = document.getElementById('checklist-recommendation');
+            const checklistProgressBar = document.getElementById('checklist-progress-bar');
+            const checklistResultBox = document.getElementById('checklist-result-box');
+            const resetChecklistButton = document.getElementById('reset-checklist-button');
+            let TOTAL_CHECKLIST_ITEMS = 7;
+            const questionsContainer = document.getElementById('questions-container');
+            const totalScoreEl = document.getElementById('total-score');
+            const resultInterpretationEl = document.getElementById('result-interpretation');
+            const submitTestButton = document.getElementById('submit-test-button');
+            const testResultsContainer = document.getElementById('test-results-container');
+            let scores = [];
 
-            // Mostrar loader y deshabilitar botón
-            loader.classList.remove('hidden');
-            analysisResultDiv.classList.add('hidden');
-            analyzeButton.disabled = true;
-            analyzeButton.innerHTML = 'Analizando...'; 
+            // --- All function definitions are now inside DOMContentLoaded ---
 
-            // Resetear íconos de emoción
-            const emotionIcons = {
-                miedo: document.getElementById('emotion-miedo'),
-                ansiedad: document.getElementById('emotion-ansiedad'),
-                codicia: document.getElementById('emotion-codicia'),
-                euforia: document.getElementById('emotion-euforia'),
-                calma: document.getElementById('emotion-calma'),
+            const updateChecklistScore = () => {
+                let score = Array.from(document.querySelectorAll('#checklist-items input:checked')).length;
+                TOTAL_CHECKLIST_ITEMS = document.querySelectorAll('#checklist-items input').length;
+                checklistScore.textContent = score;
+                const progress = (score / TOTAL_CHECKLIST_ITEMS) * 100;
+                checklistProgressBar.style.width = `${progress}%`;
+                const isReady = score === TOTAL_CHECKLIST_ITEMS;
+                checklistResultBox.className = `mt-4 p-4 rounded-lg transition-all duration-300 ${isReady ? 'bg-green-900/50 border-green-700' : 'bg-red-900/50 border-red-700'}`;
+                checklistRecommendation.className = `text-lg font-semibold ${isReady ? 'text-green-300' : 'text-red-300'}`;
+                checklistRecommendation.innerHTML = translations[currentLang][isReady ? 'checklistRecommendationReady' : 'checklistRecommendationNotReady'];
+                checklistProgressBar.classList.toggle('bg-green-500', isReady);
+                checklistProgressBar.classList.toggle('bg-purple-500', !isReady);
             };
-            // Added 'mixto' as an emotion, so initialize it as well.
-            // If it's not present in the HTML, it will be null and the null check will prevent errors.
-            const mixedEmotionIcon = document.getElementById('emotion-mixto'); 
-            if (mixedEmotionIcon) emotionIcons.mixto = mixedEmotionIcon;
 
+            const renderChecklistItems = () => {
+                const checklistContainer = document.getElementById('checklist-items');
+                const items = translations[currentLang].checklistItems;
+                checklistContainer.innerHTML = '';
+                items.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'checklist-item';
+                    div.innerHTML = `
+                        <input type="checkbox" id="check${index + 1}">
+                        <label for="check${index + 1}" class="text-lg flex items-center gap-3">${item}</label>
+                    `;
+                    checklistContainer.appendChild(div);
+                });
+                 // Re-add event listeners
+                document.querySelectorAll('#checklist-items input[type="checkbox"]').forEach(item => {
+                    item.addEventListener('change', updateChecklistScore);
+                });
+            };
 
-            Object.values(emotionIcons).forEach(icon => {
-                if (icon) { // Check if icon exists before trying to manipulate it
-                    icon.classList.remove('emotion-icon-active');
-                    icon.style.opacity = '0.5';
-                    icon.style.filter = 'none';
-                    icon.style.transform = 'scale(1)';
+            const populateEmotionSelects = () => {
+                const emotionOptions = translations[currentLang].emotionOptions;
+                const optionsHtml = `
+                    <option value="">${emotionOptions.select}</option>
+                    <option value="Calma">${emotionOptions.calm}</option>
+                    <option value="Euforia">${emotionOptions.euphoria}</option>
+                    <option value="Miedo">${emotionOptions.fear}</option>
+                    <option value="Frustracion">${emotionOptions.frustration}</option>
+                    <option value="Codicia">${emotionOptions.greed}</option>
+                `;
+                document.getElementById('op-emotion-before').innerHTML = optionsHtml;
+                document.getElementById('op-emotion-after').innerHTML = optionsHtml;
+            };
+
+            const updateWelcomeMessage = () => {
+                const welcomeEl = document.getElementById('welcome-message');
+                const displayName = userProfile?.displayName;
+                if (displayName) {
+                    const welcomeText = translations[currentLang].welcomeMessage;
+                    welcomeEl.textContent = `${welcomeText} ${displayName}!`;
+                } else {
+                    welcomeEl.textContent = translations[currentLang].analyzerTitle;
+                }
+            };
+            
+            const setLanguage = (lang) => {
+                currentLang = lang;
+                localStorage.setItem('userLanguage', lang);
+
+                document.querySelectorAll('[data-lang-key]').forEach(el => {
+                    const key = el.dataset.langKey;
+                    if (translations[lang] && translations[lang][key]) {
+                        el.innerHTML = translations[lang][key];
+                    }
+                });
+
+                document.querySelectorAll('[data-lang-key-placeholder]').forEach(el => {
+                    const key = el.dataset.langKeyPlaceholder;
+                    if (translations[lang] && translations[lang][key]) {
+                        el.placeholder = translations[lang][key];
+                    }
+                });
+                
+                document.querySelectorAll('.lang-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.lang === lang);
+                    btn.classList.toggle('bg-emerald-600', btn.dataset.lang === lang);
+                    btn.classList.toggle('bg-gray-700', btn.dataset.lang !== lang);
+                });
+                
+                updateWelcomeMessage();
+                populateEmotionSelects();
+                renderChecklistItems();
+                updateChecklistScore();
+            };
+            
+            // Subscription Elements
+            document.querySelectorAll('.subscribe-button').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const tier = button.dataset.tier;
+                     if (userId) {
+                        const profileDocRef = doc(db, `artifacts/${appId}/users/${userId}/profile/settings`);
+                        await updateDoc(profileDocRef, { subscriptionTier: tier });
+                        showModal('subscriptionSuccessTitle', 'subscriptionSuccessMessage');
+                    }
+                });
+            });
+
+            function renderQuestions() {
+                const questions = translations[currentLang].mentalTestQuestions;
+                scores = new Array(questions.length).fill(1);
+                questionsContainer.innerHTML = '';
+                questions.forEach((q, i) => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'question-item';
+                    questionDiv.innerHTML = `<label for="q${i}" class="block text-lg mb-3">${i + 1}. ${q}</label><div class="flex items-center gap-4"><span class="text-gray-400">1</span><input type="range" id="q${i}" min="1" max="5" value="${scores[i]}" class="scale-input" data-index="${i}"><span class="text-gray-400">5</span><span id="q${i}-value" class="font-bold text-xl text-cyan-400 w-8 text-center">${scores[i]}</span></div>`;
+                    questionsContainer.appendChild(questionDiv);
+                });
+            }
+
+            function calculateTotal() {
+                const total = scores.reduce((sum, current) => sum + current, 0);
+                totalScoreEl.textContent = total;
+                const gaugeNeedle = document.getElementById('gauge-needle');
+                const rotation = (total - 5) * (180 / 20) - 90;
+                gaugeNeedle.style.transform = `translateX(-50%) rotate(${rotation}deg)`;
+
+                let interpretationKey;
+                if (total <= 10) interpretationKey = 'solid';
+                else if (total <= 20) interpretationKey = 'reactive';
+                else interpretationKey = 'highRisk';
+
+                const interpretations = translations[currentLang].mindsetInterpretation;
+                const details = translations[currentLang].mindsetDetails;
+                
+                resultInterpretationEl.textContent = interpretations[interpretationKey];
+                resultInterpretationEl.className = `mt-2 text-lg font-semibold h-auto transition-all duration-300 ${
+                    interpretationKey === 'solid' ? 'text-green-400' : interpretationKey === 'reactive' ? 'text-yellow-400' : 'text-red-400'
+                }`;
+                document.getElementById('result-details').innerHTML = details[interpretationKey];
+            }
+
+            questionsContainer.addEventListener('input', (e) => {
+                if (e.target.type === 'range') {
+                    scores[parseInt(e.target.dataset.index)] = parseInt(e.target.value);
+                    document.getElementById(`${e.target.id}-value`).textContent = e.target.value;
+                    testResultsContainer.classList.remove('active');
                 }
             });
 
-            // Prompt para la IA
-            const prompt = `Analiza el siguiente texto de un trader y proporciona un objeto JSON con las siguientes propiedades:
-            - "dominantEmotion": la emoción principal detectada (solo una de: "Miedo", "Ansiedad", "Codicia", "Euforia", "Calma", "Mixto").
-            - "calmLevel": un número entero de 0 a 100 que representa el nivel de calma/objetividad emocional (0 = pánico/emociones negativas extremas, 100 = total calma/objetividad).
-            - "recommendation": una recomendación concisa y específica para el trading basada en esta emoción y nivel de calma.
-            - "fullAnalysis": una breve explicación (2-3 frases) del porqué se detectó esa emoción y el nivel de calma.
+            submitTestButton.addEventListener('click', () => {
+                calculateTotal();
+                testResultsContainer.classList.add('active');
+            });
+            
+            const showSection = (sectionId) => {
+                Object.values(sections).forEach(s => s.classList.add('hidden'));
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active', 'text-cyan-400');
+                    item.classList.add('text-gray-400');
+                });
+            
+                const activeNavItem = document.querySelector(`.nav-item[data-section="${sectionId}"]`);
+                if (activeNavItem) {
+                    activeNavItem.classList.add('active', 'text-cyan-400');
+                    activeNavItem.classList.remove('text-gray-400');
+                }
+                
+                if (sections[sectionId]) {
+                    sections[sectionId].classList.remove('hidden');
+                }
 
-            Texto a analizar: "${traderText}"`;
+                if (sectionId === 'mental-test') {
+                    renderQuestions();
+                }
+            };
 
-            let retries = 0;
-            const MAX_RETRIES = 3;
-            const BASE_DELAY = 1000; // 1 segundo
+            const checkAccess = (feature) => {
+                if (!userProfile) return false;
+                
+                const { isRegistered, subscriptionTier } = userProfile;
+                
+                const featureAccess = {
+                    'trading-journal': ['premium'],
+                    'checklist': ['premium'],
+                    'mental-test': ['pro', 'premium']
+                };
 
-            while (retries < MAX_RETRIES) {
-                try {
-                    const payload = {
-                        contents: [{ role: "user", parts: [{ text: prompt }] }],
-                        generationConfig: {
-                            responseMimeType: "application/json",
-                            responseSchema: {
-                                type: "OBJECT",
-                                properties: {
-                                    "dominantEmotion": { "type": "STRING", "enum": ["Miedo", "Ansiedad", "Codicia", "Euforia", "Calma", "Mixto"] },
-                                    "calmLevel": { "type": "INTEGER", "minimum": 0, "maximum": 100 },
-                                    "recommendation": { "type": "STRING" },
-                                    "fullAnalysis": { "type": "STRING" }
-                                }
-                            }
+                const requiredTiers = featureAccess[feature];
+                if (requiredTiers && requiredTiers.includes(subscriptionTier)) {
+                    return true;
+                }
+
+                if (!isRegistered) {
+                    showModal('registerTitle', 'registerMessage', {
+                        showCancel: true,
+                        confirmTextKey: 'registerButton',
+                        cancelTextKey: 'modalClose',
+                        onConfirm: async () => {
+                            const profileDocRef = doc(db, `artifacts/${appId}/users/${userId}/profile/settings`);
+                            await updateDoc(profileDocRef, { isRegistered: true, dailyAnalysisCount: 0 });
+                            showModal('registrationSuccessTitle', 'registrationSuccessMessage');
                         }
-                    };
+                    });
+                } else {
+                    showModal('upgradeTitle', 'upgradeMessage', {
+                        confirmTextKey: 'goToPlansButton',
+                        onConfirm: () => showSection('subscription')
+                    });
+                }
+                return false;
+            };
 
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+            document.querySelectorAll('.nav-item').forEach(button => {
+                button.addEventListener('click', () => {
+                    const sectionId = button.dataset.section;
+                    if (['trading-journal', 'mental-test'].includes(sectionId)) {
+                        if (checkAccess(sectionId)) {
+                            showSection(sectionId);
+                        }
+                    } else {
+                        showSection(sectionId);
+                    }
+                });
+            });
+            
+            checklistButton.addEventListener('click', () => {
+                if (checkAccess('checklist')) {
+                    showSection('checklist');
+                }
+            });
+
+            clearJournalButton.addEventListener('click', () => tradingJournalForm.reset());
+
+            tradingJournalForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const opData = { date: document.getElementById('op-date').value, asset: document.getElementById('op-asset').value };
+                if (!opData.date || !opData.asset) {
+                    showModal('requiredFieldsTitle', 'requiredFieldsMessage');
+                    return;
+                }
+                try {
+                    const fullOpData = { ...opData, entryTime: document.getElementById('op-entry-time').value, exitTime: document.getElementById('op-exit-time').value, amount: parseFloat(document.getElementById('op-amount').value) || 0, risk: parseFloat(document.getElementById('op-risk').value) || 0, strategy: document.getElementById('op-strategy').value, emotionBefore: document.getElementById('op-emotion-before').value, result: parseFloat(document.getElementById('op-result').value) || 0, emotionAfter: document.getElementById('op-emotion-after').value, notes: document.getElementById('op-notes').value, timestamp: Date.now() };
+                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/trading_journal`), fullOpData);
+                    showModal('tradeSavedTitle', 'tradeSavedMessage');
+                    tradingJournalForm.reset();
+                } catch (error) {
+                    console.error("Error saving trade:", error);
+                    showModal('tradeSaveErrorTitle', 'tradeSaveErrorMessage');
+                }
+            });
+
+            const renderCharts = (operations) => {
+                const emotionCounts = operations.reduce((acc, op) => { op.emotionAfter && (acc[op.emotionAfter] = (acc[op.emotionAfter] || 0) + 1); return acc; }, {});
+                const sortedOps = [...operations].sort((a, b) => a.timestamp - b.timestamp);
+                const cumulativePnl = sortedOps.reduce((acc, op) => { acc.push((acc.length > 0 ? acc[acc.length - 1] : 0) + op.result); return acc; }, []);
+
+                const chartConfig = (type, labels, data, label, color) => ({
+                    type, data: { labels, datasets: [{ label, data, backgroundColor: color, borderColor: color, tension: 0.4 }] },
+                    options: { responsive: true, scales: { y: { beginAtZero: type === 'bar', grid: { color: 'var(--border-color)' }, ticks: { color: 'var(--text-primary)' } }, x: { grid: { color: 'var(--border-color)' }, ticks: { color: 'var(--text-primary)' } } }, plugins: { legend: { display: false } } }
+                });
+
+                if (emotionChart) emotionChart.destroy();
+                emotionChart = new Chart(document.getElementById('emotion-chart').getContext('2d'), chartConfig('bar', Object.keys(emotionCounts), Object.values(emotionCounts), 'Frequency', ['#f87171', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa']));
+                if (pnlChart) pnlChart.destroy();
+                pnlChart = new Chart(document.getElementById('pnl-chart').getContext('2d'), chartConfig('line', sortedOps.map(op => op.date), cumulativePnl, 'Cumulative P&L', '#34d399'));
+            };
+
+            const runAIInsights = (operations) => {
+                if (operations.length < 5) { aiSummaryEl.textContent = translations[currentLang].aiInsightsMinimum; return; }
+                const getMostFrequent = (arr, prop) => Object.entries(arr.reduce((acc, op) => { op[prop] && (acc[op[prop]] = (acc[op[prop]] || 0) + 1); return acc; }, {})).sort((a, b) => b[1] - a[1])[0]?.[0];
+                const mostSuccessfulStrategy = getMostFrequent(operations.filter(op => op.result > 0), 'strategy');
+                const largestLossOp = operations.filter(op => op.result < 0).sort((a, b) => a.result - b.result)[0];
+                aiSummaryEl.innerHTML = `<ul class="text-left max-w-sm mx-auto space-y-2"><li><span class="font-bold text-green-400">${translations[currentLang].aiInsightEmotionBefore}</span> ${getMostFrequent(operations, 'emotionBefore') || 'N/A'}.</li><li><span class="font-bold text-green-400">${translations[currentLang].aiInsightEmotionAfter}</span> ${getMostFrequent(operations, 'emotionAfter') || 'N/A'}.</li><li><span class="font-bold text-green-400">${translations[currentLang].aiInsightStrategy}</span> "${mostSuccessfulStrategy || 'N/A'}"</li><li><span class="font-bold text-green-400">${translations[currentLang].aiInsightLoss}</span> ${translations[currentLang].aiInsightLossPart2} $${Math.abs(largestLossOp?.result || 0).toFixed(2)} ${translations[currentLang].aiInsightLossPart3} ${largestLossOp?.asset || 'N/A'}.</li></ul>`;
+            };
+
+            const API_KEY = "";
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
+            const MAX_RETRIES = 3;
+            const BASE_DELAY = 1000;
+            const emotionEmojis = { 'miedo': '😨', 'fear': '😨', 'euforia': '🤩', 'euphoria': '🤩', 'codicia': '🤑', 'greed': '🤑', 'frustracion': '😟', 'frustration': '😟', 'calma': '😌', 'calm': '😌', 'ansiedad': '😰', 'anxiety': '😰', 'felicidad': '😊', 'happiness': '😊' };
+
+            const showModal = (titleKey, messageKey, options = {}) => {
+                modalTitle.textContent = translations[currentLang][titleKey] || titleKey;
+                modalMessage.textContent = translations[currentLang][messageKey] || messageKey;
+                modalConfirmBtn.textContent = translations[currentLang][options.confirmTextKey] || options.confirmText || translations[currentLang].modalClose;
+                modalCancelBtn.textContent = translations[currentLang][options.cancelTextKey] || options.cancelText || translations[currentLang].modalCancel;
+                modalInput.value = '';
+                modalInputContainer.classList.toggle('hidden', !options.showInput);
+                modalInput.placeholder = translations[currentLang][options.inputPlaceholderKey] || options.inputPlaceholder || '';
+                modalCancelBtn.classList.toggle('hidden', !options.showCancel);
+                modalConfirmBtn.onclick = options.onConfirm ? options.onConfirm : () => modalOverlay.classList.add('hidden');
+                modalCancelBtn.onclick = () => modalOverlay.classList.add('hidden');
+                modalOverlay.classList.remove('hidden');
+            };
+            
+            modalConfirmBtn.addEventListener('click', () => modalOverlay.classList.add('hidden'));
+
+            const updateGeneralSummary = (analysisHistory) => {
+                const count = analysisHistory.length;
+                generalSummarySection.classList.toggle('hidden', count === 0);
+                if (count === 0) return;
+                if (count < MIN_ANALYSES_FOR_SUMMARY) {
+                    generalSummaryContent.innerHTML = `<p class="text-lg mt-2">${translations[currentLang].summaryNeedsMoreData}</p>`;
+                } else {
+                    const totalCalmLevel = analysisHistory.reduce((sum, analysis) => sum + analysis.calmLevel, 0);
+                    const emotionCounts = analysisHistory.reduce((acc, analysis) => { acc[analysis.dominantEmotion] = (acc[analysis.dominantEmotion] || 0) + 1; return acc; }, {});
+                    const mostFrequentEmotion = Object.keys(emotionCounts).reduce((a, b) => emotionCounts[a] > emotionCounts[b] ? a : b);
+                    const emotionKey = mostFrequentEmotion.toLowerCase().replace(/á/g, 'a').replace(/\s/g, '');
+                    generalSummaryContent.innerHTML = `<p class="text-2xl">${emotionEmojis[emotionKey] || '🤔'}</p><p class="text-lg mt-2">${translations[currentLang].summaryDominantEmotion} ${mostFrequentEmotion}.</p><p class="text-lg">${translations[currentLang].summaryAverageCalm} ${Math.round(totalCalmLevel / count)}%.<p>`;
+                }
+            };
+            
+            const handleAnalysisRequest = async () => {
+                if (!userProfile) return;
+                
+                const today = new Date().toISOString().split('T')[0];
+                const profileDocRef = doc(db, `artifacts/${appId}/users/${userId}/profile/settings`);
+                let currentCount = userProfile.dailyAnalysisCount;
+                let lastDate = userProfile.lastAnalysisDate;
+
+                if (lastDate !== today) {
+                    await updateDoc(profileDocRef, { dailyAnalysisCount: 0, lastAnalysisDate: today });
+                    currentCount = 0;
+                }
+                
+                let limit = TIER_LIMITS.free;
+                if(userProfile.isRegistered) limit = TIER_LIMITS.registered;
+                if(userProfile.subscriptionTier === 'pro') limit = TIER_LIMITS.pro;
+                if(userProfile.subscriptionTier === 'premium') limit = TIER_LIMITS.premium;
+
+                if (currentCount >= limit) {
+                    if (!userProfile.isRegistered) {
+                         showModal('registerTitle', 'registerMessage', { showCancel: true, confirmTextKey: 'registerButton', cancelTextKey: 'modalClose', onConfirm: async () => {
+                            await updateDoc(profileDocRef, { isRegistered: true, dailyAnalysisCount: 0 });
+                            showModal('registrationSuccessTitle', 'registrationSuccessMessage');
+                        }});
+                    } else {
+                        showModal('limitReachedTitle', 'upgradeMessage', { confirmTextKey: 'goToPlansButton', onConfirm: () => showSection('subscription') });
+                    }
+                    return;
+                }
+                await performAIAnalysis(profileDocRef);
+            };
+
+            const performAIAnalysis = async (profileDocRef) => {
+                const promptText = tradingExperienceEl.value.trim();
+                if (!promptText) { showModal('emptyFieldTitle', 'emptyFieldMessage'); return; }
+                
+                analyzeButton.disabled = true;
+                buttonText.classList.add('hidden');
+                loader.classList.remove('hidden');
+
+                let success = false;
+                for (let retries = 0; retries < MAX_RETRIES; retries++) {
+                    try {
+                        const systemPrompt = `Analyze the user's trading experience, provided in ${currentLang}. Respond ONLY with a valid JSON object containing: "dominantEmotion", "calmLevel" (0-100), "riskLevel" (HIGH, MEDIUM, LOW), and a 1-2 sentence "recommendation". All text values in the JSON must be in ${currentLang}.`;
+                        const payload = { contents: [{ parts: [{ text: promptText }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { "dominantEmotion": { "type": "STRING" }, "calmLevel": { "type": "INTEGER" }, "riskLevel": { "type": "STRING" }, "recommendation": { "type": "STRING" } } } } };
+                        
+                        const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+                        const result = await response.json();
+                        const jsonResponse = JSON.parse(result.candidates[0].content.parts[0].text);
+
+                        const { dominantEmotion, calmLevel, riskLevel, recommendation } = jsonResponse;
+                        const emotionKey = dominantEmotion.toLowerCase().replace(/á/g, 'a').replace(/\s/g, '');
+                        emotionEmojisEl.innerHTML = `<div class="emotion-emoji-item">${emotionEmojis[emotionKey] || '🤔'}</div>`;
+                        dominantEmotionDisplayEl.textContent = dominantEmotion;
+                        riskLevelDisplayEl.textContent = `${translations[currentLang].riskLevelPrefix} ${translations[currentLang].riskLevels[riskLevel.toUpperCase()]}`;
+                        recommendationDisplayEl.textContent = recommendation;
+                        
+                        const resultsWrapper = document.getElementById('results-wrapper');
+                        resultsWrapper.style.maxHeight = document.getElementById('results-section').scrollHeight + 'px';
+                        
+                        await addDoc(collection(db, `artifacts/${appId}/users/${userId}/analyses`), { dominantEmotion, calmLevel, riskLevel, timestamp: Date.now() });
+                        await updateDoc(profileDocRef, { dailyAnalysisCount: increment(1) });
+                        success = true;
+                        break;
+                    } catch (error) {
+                        console.error("Error in analysis:", error);
+                        if (retries < MAX_RETRIES - 1) await new Promise(res => setTimeout(res, BASE_DELAY * Math.pow(2, retries)));
+                    }
+                }
+                if (!success) showModal('analysisErrorTitle', 'analysisErrorMessage');
+                
+                analyzeButton.disabled = false;
+                buttonText.classList.remove('hidden');
+                loader.classList.add('hidden');
+            };
+
+            const applyTheme = (theme) => {
+                document.body.classList.toggle('light-mode', theme === 'light');
+                themeButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.theme === theme);
+                    btn.classList.toggle('bg-indigo-600', btn.dataset.theme === theme);
+                    btn.classList.toggle('bg-gray-700', btn.dataset.theme !== theme);
+                });
+            };
+            
+            const updateUIForTier = () => {
+                if (!userProfile) return;
+                const { subscriptionTier, isRegistered } = userProfile;
+                const features = {
+                    'trading-journal': ['premium'],
+                    'mental-test': ['pro', 'premium']
+                };
+
+                Object.entries(features).forEach(([feature, tiers]) => {
+                    const hasAccess = tiers.includes(subscriptionTier);
+                    const navItem = document.querySelector(`.nav-item[data-section="${feature}"]`);
+                    if (navItem) {
+                        let lockIcon = navItem.querySelector('.lock-icon');
+                        if (!hasAccess && !lockIcon) {
+                            lockIcon = document.createElement('i');
+                            lockIcon.className = 'fas fa-lock lock-icon';
+                            navItem.appendChild(lockIcon);
+                        } else if (hasAccess && lockIcon) {
+                            lockIcon.remove();
+                        }
+                    }
+                });
+
+                const analysesCountEl = document.getElementById('analyses-count');
+                const analysesLimitEl = document.getElementById('analyses-limit');
+                let limit = TIER_LIMITS.free;
+                if(isRegistered) limit = TIER_LIMITS.registered;
+                if(subscriptionTier === 'pro') limit = TIER_LIMITS.pro;
+                if(subscriptionTier === 'premium') limit = TIER_LIMITS.premium;
+
+                analysesCountEl.textContent = userProfile.dailyAnalysisCount || 0;
+                analysesLimitEl.textContent = limit;
+            };
+
+            const cleanupListeners = () => {
+                 if (unsubscribeProfile) unsubscribeProfile();
+                 if (unsubscribeAnalyses) unsubscribeAnalyses();
+                 if (unsubscribeJournal) unsubscribeJournal();
+            };
+
+            // --- Event Listeners ---
+            analyzeButton.addEventListener('click', handleAnalysisRequest);
+            resetChecklistButton.addEventListener('click', () => {
+                document.querySelectorAll('#checklist-items input').forEach(i => i.checked = false);
+                updateChecklistScore();
+            });
+            tradingExperienceEl.addEventListener('input', () => { document.getElementById('results-wrapper').style.maxHeight = '0px'; });
+            saveProfileButton.addEventListener('click', async () => {
+                const newName = displayNameInput.value.trim();
+                if (newName && userId) {
+                    try {
+                        await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/profile/settings`), { displayName: newName });
+                        showModal('nameSavedTitle', 'nameSavedMessage');
+                    } catch (error) {
+                        showModal('nameSaveErrorTitle', 'nameSaveErrorMessage');
+                    }
+                }
+            });
+            themeButtons.forEach(b => b.addEventListener('click', async () => { applyTheme(b.dataset.theme); await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/profile/settings`), { theme: b.dataset.theme }); }));
+            langButtons.forEach(b => b.addEventListener('click', async () => { setLanguage(b.dataset.lang); await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/profile/settings`), { language: b.dataset.lang }); }));
+            deleteJournalButton.addEventListener('click', () => {
+                showModal('deleteJournalConfirmTitle', 'deleteJournalConfirmMessage', { showCancel: true, showInput: true, inputPlaceholderKey: 'deleteJournalInputPlaceholder', confirmTextKey: 'deleteJournalConfirmButton', onConfirm: async () => {
+                    if (['BORRAR', 'DELETE'].includes(modalInput.value.toUpperCase())) {
+                        const querySnapshot = await getDocs(collection(db, `artifacts/${appId}/users/${userId}/trading_journal`));
+                        const batch = writeBatch(db);
+                        querySnapshot.forEach(d => batch.delete(d.ref));
+                        await batch.commit();
+                        showModal('deleteJournalSuccessTitle', 'deleteJournalSuccessMessage');
+                    } else { showModal('deleteJournalErrorTitle', 'deleteJournalCancelMessage'); }
+                }});
+            });
+            saveReminderButton.addEventListener('click', () => {
+                const time = reminderTimeEl.value;
+                if(time) { localStorage.setItem('tradingReminder', time); showModal('reminderSavedTitle', `${translations[currentLang].reminderSavedMessage} ${time}. ${translations[currentLang].reminderSavedMessage2}`); }
+                else { showModal('reminderErrorTitle', 'reminderErrorMessage'); }
+            });
+            if(localStorage.getItem('tradingReminder')) reminderTimeEl.value = localStorage.getItem('tradingReminder');
+
+            // --- Firebase Auth & Firestore Logic ---
+            onAuthStateChanged(auth, async (user) => {
+                cleanupListeners(); 
+                if (user) {
+                    userId = user.uid;
+                    userIdEl.textContent = userId;
+                    profileUserIdEl.textContent = userId;
+                    
+                    const profileDocRef = doc(db, `artifacts/${appId}/users/${userId}/profile/settings`);
+                    unsubscribeProfile = onSnapshot(profileDocRef, (doc) => {
+                        if (doc.exists()) {
+                            userProfile = doc.data();
+                            displayNameInput.value = userProfile.displayName || '';
+                            applyTheme(userProfile.theme || 'dark');
+                            updateWelcomeMessage();
+                            updateUIForTier();
+                        } else {
+                            const today = new Date().toISOString().split('T')[0];
+                            const defaultProfile = {
+                                displayName: '',
+                                theme: 'dark',
+                                language: 'es',
+                                subscriptionTier: 'free',
+                                isRegistered: false,
+                                dailyAnalysisCount: 0,
+                                lastAnalysisDate: today
+                            };
+                            setDoc(profileDocRef, defaultProfile);
+                        }
                     });
 
-                    if (!response.ok) {
-                        const errorBody = await response.text(); // Intenta leer el cuerpo del error como texto
-                        console.error(`Error HTTP ${response.status}:`, errorBody);
-                        
-                        // Detectar específicamente el error de API Key no válida
-                        if (response.status === 400 && errorBody.includes("API key not valid")) {
-                            throw new Error("API_KEY_INVALID");
-                        } else {
-                            throw new Error(`Error HTTP ${response.status} de la API: ${errorBody.substring(0, 100)}...`); 
-                        }
-                    }
-
-                    const result = await response.json();
-
-                    if (!result.candidates || result.candidates.length === 0 ||
-                        !result.candidates[0].content || !result.candidates[0].content.parts ||
-                        result.candidates[0].content.parts.length === 0) {
-                        console.error("Estructura de respuesta inesperada del API. Resultado completo:", result);
-                        throw new Error("Estructura de respuesta inesperada del API o contenido vacío.");
-                    }
-                    
-                    const jsonString = result.candidates[0].content.parts[0].text;
-                    let parsedJson;
-                    try {
-                        parsedJson = JSON.parse(jsonString);
-                    } catch (parseError) {
-                        console.error("Error al parsear JSON de la API:", parseError, "String recibido:", jsonString);
-                        throw new Error("Respuesta JSON inválida de la API.");
-                    }
-
-                    const { dominantEmotion, calmLevel, recommendation, fullAnalysis } = parsedJson;
-
-                    // Actualizar termómetro y íconos de emoción
-                    const emotionLevelBar = document.getElementById('emotion-level-bar');
-                    emotionLevelBar.style.height = `${calmLevel}%`;
-
-                    const emotionMap = {
-                        "Miedo": "miedo", "Ansiedad": "ansiedad", "Codicia": "codicia",
-                        "Euforia": "euforia", "Calma": "calma", "Mixto": "mixto" 
-                    };
-                    const mappedEmotion = emotionMap[dominantEmotion];
-                    if (emotionIcons[mappedEmotion]) {
-                        emotionIcons[mappedEmotion].classList.add('emotion-icon-active');
-                        emotionIcons[mappedEmotion].style.opacity = '1';
-                        // Keep text-shadow and transform as defined in CSS for active
-                    }
-
-                    // Actualizar Nivel de Riesgo
-                    const riskLevelIndicator = document.getElementById('risk-level-indicator');
-                    let riskClass = '';
-                    let riskText = '';
-                    if (calmLevel <= 30) {
-                        riskText = 'ALTO';
-                        riskClass = 'risk-high';
-                    } else if (calmLevel <= 70) {
-                        riskText = 'MODERADO';
-                        riskClass = 'risk-medium';
-                    } else {
-                        riskText = 'BAJO';
-                        riskClass = 'risk-low';
-                    }
-                    riskLevelIndicator.textContent = `Nivel: ${riskText}`;
-                    riskLevelIndicator.className = `risk-indicator ${riskClass}`;
-
-                    // Actualizar Recomendaciones
-                    document.getElementById('recommendations-text').textContent = recommendation;
-
-                    // Mostrar Análisis Detallado
-                    aiFullAnalysisP.textContent = fullAnalysis;
-                    analysisResultDiv.classList.remove('hidden');
-
-                    // Decrementar usos restantes y guardar
-                    dailyUsesLeft--;
-                    localStorage.setItem(USES_KEY, dailyUsesLeft);
-
-                    // Guardar análisis en el historial
-                    let history = JSON.parse(localStorage.getItem(ANALYSIS_HISTORY_KEY) || '[]');
-                    history.push({ dominantEmotion, calmLevel, recommendation, fullAnalysis, text: traderText });
-                    if (history.length > HISTORY_LIMIT) {
-                        history = history.slice(history.length - HISTORY_LIMIT); // Mantener solo los últimos X
-                    }
-                    localStorage.setItem(ANALYSIS_HISTORY_KEY, JSON.stringify(history));
-
-                    updateTrialDisplay();
-                    updateOverallEmotionalSummary(); // Actualizar el resumen general
-                    break; // Salir del bucle si es exitoso
-
-                } catch (error) {
-                    loader.classList.add('hidden'); // Ocultar loader
-                    analyzeButton.disabled = false; // Habilitar botón
-                    analyzeButton.innerHTML = `Analizar mi Emoción (<span id="trial-count">${dailyUsesLeft}</span> Uso${dailyUsesLeft !== 1 ? 's' : ''} Restantes Hoy)`;
-
-                    console.error("Error durante el análisis:", error);
-                    let errorMessage = "Ocurrió un error inesperado al analizar tu texto. Intenta de nuevo.";
-                    if (error.message === "API_KEY_INVALID") {
-                        errorMessage = 'Tu clave de API de Gemini no es válida. Por favor, reemplaza "TU_CLAVE_DE_API_DE_GEMINI_AQUI" en el código.';
-                    } else if (error.message.includes("Error HTTP 429")) { // Too Many Requests
-                        errorMessage = "Demasiadas solicitudes. Por favor, espera un momento antes de intentarlo de nuevo.";
-                    } else if (error.message.includes("Error HTTP") || error.message.includes("Estructura de respuesta inesperada")) {
-                        errorMessage = "Problemas con la respuesta del servidor o la clave de API. Verifica la consola para más detalles.";
-                    }
-                    showModal('Error de Análisis', errorMessage);
-                    retries++;
-                    if (retries < MAX_RETRIES) {
-                        const delay = BASE_DELAY * Math.pow(2, retries -1); // Exponential backoff
-                        console.log(`Reintentando en ${delay / 1000} segundos...`);
-                        await new Promise(res => setTimeout(res, delay));
-                    } else {
-                        showModal('Error Crítico', 'Fallaron múltiples intentos de conexión. Por favor, revisa tu conexión a internet o la configuración de la API.');
-                    }
+                    unsubscribeAnalyses = onSnapshot(query(collection(db, `artifacts/${appId}/users/${userId}/analyses`)), (s) => updateGeneralSummary(s.docs.map(d => d.data())));
+                    unsubscribeJournal = onSnapshot(query(collection(db, `artifacts/${appId}/users/${userId}/trading_journal`)), (s) => {
+                        operationsList.innerHTML = '';
+                        aiSummaryEl.textContent = translations[currentLang].notEnoughData;
+                        const operations = s.docs.map(d => ({...d.data(), id: d.id}));
+                        noOperationsMessage.classList.toggle('hidden', !s.empty);
+                        renderCharts(operations);
+                        runAIInsights(operations);
+                        operations.sort((a,b) => b.timestamp - a.timestamp).slice(0, 5).forEach(op => {
+                            const li = document.createElement('li');
+                            li.className = 'card-operation';
+                            li.innerHTML = `<div class="flex justify-between items-center text-sm text-gray-400"><span>${op.date}</span><span>${op.entryTime || 'N/A'} - ${op.exitTime || 'N/A'}</span></div><p class="text-lg font-bold text-emerald-300">${translations[currentLang].journalCard.asset}: ${op.asset}</p><p class="text-sm">${translations[currentLang].journalCard.strategy}: ${op.strategy || 'N/A'}</p><p class="text-sm">${translations[currentLang].journalCard.result}: <span class="font-bold ${op.result >= 0 ? 'text-green-400' : 'text-red-400'}">${op.result >= 0 ? '+' : ''}${op.result.toFixed(2)}</span></p><p class="text-sm">${translations[currentLang].journalCard.emotionBeforeAfter}: ${op.emotionBefore || 'N/A'} / ${op.emotionAfter || 'N/A'}</p><p class="text-xs text-gray-500 mt-2">${translations[currentLang].journalCard.notes}: ${op.notes || 'N/A'}</p>`;
+                            operationsList.appendChild(li);
+                        });
+                    });
+                } else {
+                    const signIn = initialAuthToken ? signInWithCustomToken(auth, initialAuthToken) : signInAnonymously(auth);
+                    signIn.catch(err => { console.error("Sign-in error:", err); signInAnonymously(auth); });
                 }
-            }
-        }
+            });
+
+            // Initial call to set language
+            const initialLang = localStorage.getItem('userLanguage') || 'es';
+            setLanguage(initialLang);
+        });
     </script>
 </body>
 </html>
+
